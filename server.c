@@ -89,7 +89,7 @@ pid_t global_et_client(char * msg) {
     // Make domain
     char domain_str[BUF_SIZE];
     strncpy(domain_str, get_domain(msg), DOMAIN_LEN);  // domain is maximum 255
-    strncpy(domain_str, "\0", 0); 
+    // strncpy(domain_str, "\0", 0); 
 
     if ( -1 == mkdir(domain_str, 0777) ) {
         perror("Cannot make directory..."); // domain maps to something
