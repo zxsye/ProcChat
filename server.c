@@ -86,17 +86,19 @@ pid_t global_et_client(char * msg) {
         return -1;
     }
 
-    for (int i = 0; i < 2048; i++) {
-        printf("%d ", msg[i]);
-    }
+    // for (int i = 0; i < 2048; i++) {
+    //     printf("%d ", msg[i]);
+    // }
 
-    for (int i = 0; i < 2048; i++) {
-        printf("%c ", msg[i]);
-    }
+    // for (int i = 0; i < 2048; i++) {
+    //     printf("%c ", msg[i]);
+    // }
 
     // Make domain
     char domain_str[BUF_SIZE];
     strncpy(domain_str, get_domain(msg), DOMAIN_LEN);  // domain is maximum 255
+    printf("%s\n", domain_str);
+    
     // strncpy(domain_str, "\0", 0); 
 
     if ( -1 == mkdir(domain_str, 0777) ) {
