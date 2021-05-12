@@ -90,9 +90,9 @@ pid_t global_et_client(char * msg) {
     //     printf("%d ", msg[i]);
     // }
 
-    // for (int i = 0; i < 2048; i++) {
-    //     printf("%c ", msg[i]);
-    // }
+    for (int i = 0; i < 2048; i++) {
+        printf("%c ", msg[i]);
+    }
 
     // Make domain
     char domain_str[BUF_SIZE];
