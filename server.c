@@ -52,7 +52,7 @@ char * get_identifier(char * string) {
 
 // Return pointer to first character of the "domain"
 char * get_domain(char * string) {
-    return &string[DOMAIN_IX];
+    return string + DOMAIN_IX;
 }
 
 /*  Handles async monitoring of client, reporting back to global process
@@ -84,6 +84,14 @@ pid_t global_et_client(char * msg) {
     // Try connecting
     if (get_type(msg) != Connect) {
         return -1;
+    }
+
+    for (int i = 0; i < 2048; i++) {
+        printf("%d ", msg[i]);
+    }
+
+    for (int i = 0; i < 2048; i++) {
+        printf("%c ", msg[i]);
     }
 
     // Make domain
