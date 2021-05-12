@@ -37,7 +37,6 @@ enum type {
 };
 
 enum type get_type(char * string) {
-    printf("%s\n", string);
     if (string[0] == 0) {
         BYTE ret = string[1];
         return ret;
@@ -111,6 +110,8 @@ pid_t global_et_client(char * msg) {
     // strncpy(to_daemon_fp, "\0", 0); 
 
     // Starting FIFO
+    printf("%s\n", to_client_fp);
+    printf("%s\n", to_daemon_fp);
     if ( mkfifo(to_client_fp, S_IRWXU | S_IRWXG) == -1 ) {
         perror("Could not make pipe to client (RD)");
         return -1;
