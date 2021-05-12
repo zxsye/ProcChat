@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-Wall -Werror -Wvla -std=c11 -fsanitize=address
+CFLAGS=-Wall -Werror -Wvla -std=c99 -fsanitize=address
 PFLAGS=-fprofile-arcs -ftest-coverage
 DFLAGS=-g
 HEADERS=server.h
