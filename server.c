@@ -1,3 +1,5 @@
+#define _POSIX_SOURCE
+
 #include "server.h"
 #include <stdint.h>
 #include <stdio.h> 
