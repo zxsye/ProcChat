@@ -183,7 +183,9 @@ int main(int argc, char** argv) {
             char buf[BUF_SIZE]; 
 
             // generate daemon
-            while (fgets(buf, BUF_SIZE, read_channel) != NULL) {    
+            while (fgets(buf, BUF_SIZE, read_channel) != NULL) {
+                /*DEBUG*/printf("gevent...\n");
+                /*DEBUG*/printf("%s\n",buf);
                 global_et_client(buf); 
             }
 
