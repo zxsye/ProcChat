@@ -124,11 +124,11 @@ pid_t global_et_client(char * msg) {
     /*DEBUG*/ printf("%s\n", to_client_fp);
     /*DEBUG*/ printf("%s\n", to_daemon_fp);
     if ( mkfifo(to_client_fp, S_IRWXU | S_IRWXG) == -1 ) {
-        perror("Could not make pipe to client (RD)");
+        printf("Could not make pipe to client (RD)\n");
         return -1;
     }
     if ( mkfifo(to_daemon_fp, S_IRWXU | S_IRWXG) == -1 ) {
-        perror("Could not make pipe to daemon (WR)");
+        printf("Could not make pipe to daemon (WR)\n");
         return -1;
     }
 
