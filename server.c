@@ -23,8 +23,8 @@
 #define DOMAIN_IX (2 + 256)
 
 #define TYPE_LEN 2
-#define IDEN_LEN 256
-#define DOMAIN_LEN (2048 - 256 - 2)
+#define IDEN_LEN 256    // max = 255 char with 1 for null byte
+#define DOMAIN_LEN 256  // max = 255 char with 1 for null byte
 
 
 enum type {
@@ -88,7 +88,7 @@ pid_t global_et_client(char * msg) {
 
     // Make domain
     char domain_str[BUF_SIZE];
-    strncpy(domain_str, msg + DOMAIN_IX, 255);  // domain is maximum 255
+    strncpy(domain_str, get_domain(msg), DOMAIN_LEN);  // domain is maximum 255
     strncpy(domain_str, "\0", 0); 
 
     if ( -1 == mkdir(domain_str, 0777) ) {
@@ -97,17 +97,17 @@ pid_t global_et_client(char * msg) {
 
     // File path to FIFO
     char to_client_fp[BUF_SIZE];
-    strncpy(to_client_fp, msg + DOMAIN_IX, DOMAIN_LEN); // domain
+    strncpy(to_client_fp, get_domain(msg), DOMAIN_LEN); // domain
     strcpy(to_client_fp, "/");                          // domain/
-    strncpy(to_client_fp, msg + IDEN_IX, IDEN_LEN);     // domain/identifier
+    strncpy(to_client_fp, get_identifier(msg), IDEN_LEN);     // domain/identifier
 
     char to_daemon_fp[BUF_SIZE];
     strcpy(to_daemon_fp, to_client_fp);                 // domain/identifier
     strcpy(to_daemon_fp, "_WR");                        // domain/identifier_RD
     strcpy(to_client_fp, "_RD");                        // domain/identifier_RD
     
-    strncpy(to_client_fp, "\0", 0); // add terminating character no matter what
-    strncpy(to_daemon_fp, "\0", 0); 
+    // strncpy(to_client_fp, "\0", 0); // add terminating character no matter what
+    // strncpy(to_daemon_fp, "\0", 0); 
 
     // Starting FIFO
     if ( mkfifo(to_client_fp, S_IRWXU | S_IRWXG) == -1 ) {
