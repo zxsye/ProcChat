@@ -37,6 +37,7 @@ enum type {
 };
 
 enum type get_type(char * string) {
+    printf("%s\n", string);
     if (string[0] == 0) {
         BYTE ret = string[1];
         return ret;
