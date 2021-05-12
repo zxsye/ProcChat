@@ -121,8 +121,8 @@ pid_t global_et_client(char * msg) {
     // strncpy(to_daemon_fp, "\0", 0); 
 
     // Starting FIFO
-    //DEBUG printf("%s\n", to_client_fp);
-    //DEBUG printf("%s\n", to_daemon_fp);
+    /*DEBUG*/ printf("%s\n", to_client_fp);
+    /*DEBUG*/ printf("%s\n", to_daemon_fp);
     if ( mkfifo(to_client_fp, S_IRWXU | S_IRWXG) == -1 ) {
         perror("Could not make pipe to client (RD)");
         return -1;
@@ -184,8 +184,7 @@ int main(int argc, char** argv) {
 
             // generate daemon
             while (fgets(buf, BUF_SIZE, read_channel) != NULL) {
-                /*DEBUG*/printf("gevent...\n");
-                /*DEBUG*/printf("%s\n",buf);
+                //DEBUG*/printf("gevent...\n");
                 global_et_client(buf); 
             }
 
