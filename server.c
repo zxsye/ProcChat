@@ -121,8 +121,8 @@ pid_t global_et_client(char * msg) {
     // strncpy(to_daemon_fp, "\0", 0); 
 
     // Starting FIFO
-    printf("%s\n", to_client_fp);
-    printf("%s\n", to_daemon_fp);
+    //DEBUG printf("%s\n", to_client_fp);
+    //DEBUG printf("%s\n", to_daemon_fp);
     if ( mkfifo(to_client_fp, S_IRWXU | S_IRWXG) == -1 ) {
         perror("Could not make pipe to client (RD)");
         return -1;
@@ -196,7 +196,7 @@ int main(int argc, char** argv) {
                 // set up pipes...
 
 
-            printf("closing pipe...\n");
+            //DEBUG printf("closing pipe...\n");
             fclose(read_channel); 
         }
         close(fd);
