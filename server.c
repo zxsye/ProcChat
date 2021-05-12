@@ -104,12 +104,16 @@ pid_t global_et_client(char * msg) {
 
     // File path to FIFO
     char to_client_fp[BUF_SIZE];
-    strcat(to_client_fp, get_domain(msg)); // domain
-    strcat(to_client_fp, "/");                          // domain/
-    strcat(to_client_fp, get_identifier(msg));     // domain/identifier
-
     char to_daemon_fp[BUF_SIZE];
+
+    strcat(to_client_fp, get_domain(msg));              // domain
+    strcat(to_client_fp, "/");                          // domain/
+    strcat(to_client_fp, get_identifier(msg));          // domain/identifier
     strcat(to_daemon_fp, to_client_fp);                 // domain/identifier
+
+    printf("%s\n", to_client_fp);
+    printf("%s\n", to_daemon_fp);
+
     strcat(to_daemon_fp, "_WR");                        // domain/identifier_RD
     strcat(to_client_fp, "_RD");                        // domain/identifier_RD
     
