@@ -97,9 +97,6 @@ pid_t global_et_client(char * msg) {
     // Make domain
     char domain_str[BUF_SIZE];
     strncpy(domain_str, get_domain(msg), DOMAIN_LEN);  // domain is maximum 255
-    printf("%s\n", domain_str);
-    
-    // strncpy(domain_str, "\0", 0); 
 
     if ( -1 == mkdir(domain_str, 0777) ) {
         perror("Cannot make directory..."); // domain maps to something
@@ -107,14 +104,14 @@ pid_t global_et_client(char * msg) {
 
     // File path to FIFO
     char to_client_fp[BUF_SIZE];
-    strncpy(to_client_fp, get_domain(msg), DOMAIN_LEN); // domain
-    strcpy(to_client_fp, "/");                          // domain/
-    strncpy(to_client_fp, get_identifier(msg), IDEN_LEN);     // domain/identifier
+    strcat(to_client_fp, get_domain(msg)); // domain
+    strcat(to_client_fp, "/");                          // domain/
+    strcat(to_client_fp, get_identifier(msg));     // domain/identifier
 
     char to_daemon_fp[BUF_SIZE];
-    strcpy(to_daemon_fp, to_client_fp);                 // domain/identifier
-    strcpy(to_daemon_fp, "_WR");                        // domain/identifier_RD
-    strcpy(to_client_fp, "_RD");                        // domain/identifier_RD
+    strcat(to_daemon_fp, to_client_fp);                 // domain/identifier
+    strcat(to_daemon_fp, "_WR");                        // domain/identifier_RD
+    strcat(to_client_fp, "_RD");                        // domain/identifier_RD
     
     // strncpy(to_client_fp, "\0", 0); // add terminating character no matter what
     // strncpy(to_daemon_fp, "\0", 0); 
