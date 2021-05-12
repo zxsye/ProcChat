@@ -182,19 +182,16 @@ int main(int argc, char** argv) {
             FILE * read_channel = fdopen(fd, "r"); 
             char buf[BUF_SIZE]; 
 
-            if (fgets(buf, BUF_SIZE, read_channel) != NULL) {
-                global_et_client(buf);
-
-
-            } else {
-                perror("Message is wrong");
+            // generate daemon
+            while (fgets(buf, BUF_SIZE, read_channel) != NULL) {    
+                global_et_client(buf); 
             }
-                // split string
-                // find command id
-                // execute command 
-                // make new process???
-                // set up pipes...
 
+            // split string
+            // find command id
+            // execute command 
+            // make new process???
+            // set up pipes...
 
             //DEBUG printf("closing pipe...\n");
             fclose(read_channel); 
