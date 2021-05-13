@@ -374,7 +374,10 @@ int start_daemon(int gevent_fd) {
 			// Start reading from clients
             int succ = handle_client_message(fd_dae_RD, domain_str, to_client_fp, 
                                              to_daemon_fp);
-
+            if (succ == -1) {
+                return -1; //@TODO: change to something else
+            }
+            
 			if (-1 == nread) {
 				perror("failed to read");
 			} else {
