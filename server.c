@@ -83,6 +83,8 @@ int daemon(int fd_dae_WR, int fd_dae_RD) {
  *      - Starts DAEMON function: monitors read pipe
  *
  *  Return: 0 = child terminated
+ *          1 = success
+ *          -1 = fail
  */
 pid_t global_et_client(char * msg) {
     // Try connecting
@@ -140,41 +142,41 @@ pid_t global_et_client(char * msg) {
     }
 
     // Begin forking...
-    pid_t pid = fork();
-    if (pid < 0) {
-        printf("\nCould not fork.");
-        return -1;
-    }
+    // pid_t pid = fork();
+    // if (pid < 0) {
+    //     printf("\nCould not fork.");
+    //     return -1;
+    // }
 
-    // Child process: daemon
-    if (pid == 0) {
-        // Open pipe as FD
-        int fd_dae_WR = open(to_client_fp, O_NONBLOCK | O_WRONLY);
-        int fd_dae_RD = open(to_daemon_fp, O_NONBLOCK | O_WRONLY);
+    // // Child process: daemon
+    // if (pid == 0) {
+    //     // Open pipe as FD
+    //     int fd_dae_WR = open(to_client_fp, O_NONBLOCK | O_WRONLY);
+    //     int fd_dae_RD = open(to_daemon_fp, O_NONBLOCK | O_WRONLY);
         
-        // Reading from client
-        if (fd_dae_RD > 0) {
-            FILE * read_channel = fdopen(fd_dae_RD, "r");
-            char buf[BUF_SIZE];
-            while( fgets(buf, BUF_SIZE, read_channel) != NULL ) {
+    //     // Reading from client
+    //     if (fd_dae_RD > 0) {
+    //         FILE * read_channel = fdopen(fd_dae_RD, "r");
+    //         char buf[BUF_SIZE];
+    //         while( fgets(buf, BUF_SIZE, read_channel) != NULL ) {
 
-            }
-            /* After all write ports have been closed (from client side),
-             * we exit the loop and will close the read port. */
-            fclose( read_channel );
-        }
+    //         }
+    //         /* After all write ports have been closed (from client side),
+    //          * we exit the loop and will close the read port. */
+    //         fclose( read_channel );
+    //     }
         
-        close(fd_dae_WR);
-        close(fd_dae_RD);
-        return 0;
+    //     close(fd_dae_WR);
+    //     close(fd_dae_RD);
+    //     return 0;
 
-    } else {
-    // Global processes: mother
+    // } else {
+    // // Global processes: mother
         
-        return -1;
-    }
+    //     return -1;
+    // }
 
-    return 0;
+    return 1;
 }
 
 
@@ -189,24 +191,29 @@ int main(int argc, char** argv) {
     int gevent_fd = open(CHANNEL_NAME, O_RDONLY);
     
     fd_set allfds;
+
+    FD_ZERO(&allfds);
+    FD_SET(gevent_fd, &allfds);
+
     int n_fds = gevent_fd + 1;
     
     struct timeval tv;
 
     while (1) {
-        
+    
+        tv.tv_sec = 2;
+        tv.tv_usec = 0;
+
         FD_ZERO(&allfds);
         FD_SET(gevent_fd, &allfds);
 
-        tv.tv_sec = 10;
-        tv.tv_usec = 0;
-
         int ret = select(n_fds, &allfds, NULL, NULL, &tv);
 
+        // Event has occurred
         if (-1 == ret || 0 == ret) { //@todo, what is 0 ?
             printf("\nselect() failed");
 
-        } else if (FD_ISSET(gevent_fd, &allfds)) {
+        } else if ( FD_ISSET(gevent_fd, &allfds) ) {
 
             char buf[BUF_SIZE];
             ssize_t nread;
@@ -224,10 +231,12 @@ int main(int argc, char** argv) {
 
             if (dae_ret == -1) {
                 printf("\nGlobal: Could not initiate daemon.");
-                continue;
+
             } else if (dae_ret == 0) {
                 /*DEBUG*/printf("Daemon terminated.\n");
                 return 0;   
+            } else if (1 == dae_ret) {
+                continue;
             }
            
         }
@@ -263,11 +272,18 @@ int main(int argc, char** argv) {
         // }
         
     }
+
     close(gevent_fd);
 
     return 0;
 
 }
+
+
+
+
+
+
 
 
     // char arg0[ARG_SIZE];
