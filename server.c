@@ -17,7 +17,7 @@
 #include <unistd.h>
 
 #define BYTE unsigned char
-#define BUF_SIZE (2049)
+#define BUF_SIZE (2048)
 #define CHANNEL_NAME ("gevent")
 
 #define TYPE_IX 0
@@ -238,6 +238,7 @@ int main(int argc, char** argv) {
 
             } else if (dae_ret == 0) {
                 /*DEBUG*/printf("Daemon terminated.\n");
+                break;
                 return 0;   
             } else if (1 == dae_ret) {
                 continue;
