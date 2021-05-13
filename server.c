@@ -315,8 +315,8 @@ int start_daemon(int gevent_fd) {
     strcat(to_client_fp, "_RD");                        // domain/identifier_RD
     
     // Starting FIFO
-    printf("%s\n", to_client_fp);
-    printf("%s\n", to_daemon_fp);
+    // printf("%s\n", to_client_fp);
+    // printf("%s\n", to_daemon_fp);
     // @TODO: overwrite existing pipe if needed
     if ( mkfifo(to_client_fp, 0777) == -1 ) {
         return -1;
