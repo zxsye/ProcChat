@@ -248,7 +248,7 @@ int start_daemon(int gevent_fd) {
     if (pid != 0) {
         return 0;
     }
-
+    printf("Child process started...\n");
     // Child process: daemon
     close(gevent_fd);
 
@@ -266,6 +266,7 @@ int start_daemon(int gevent_fd) {
 	struct timeval timeout;
 
     // ========= Monitoring client =========
+    printf("Begin monitoring client...\n");
 	while (1)
 	{
 		FD_ZERO(&allfds); //   000000
@@ -284,6 +285,7 @@ int start_daemon(int gevent_fd) {
 
 		} else if (FD_ISSET(fd_dae_RD, &allfds)) {
 			// Start reading from clients
+            printf("Handling message...\n");
             int succ = handle_client_message(fd_dae_RD, domain_str, to_client_fp, 
                                              to_daemon_fp);
             if (succ == -1) {
