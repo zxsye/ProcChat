@@ -128,6 +128,8 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp) {
             strcat(draft, SAY_MSG_INDEX(buffer));
 
             write(fd, draft, strlen( draft ) + 1);
+            printf("%s\n", get_identifier(buffer));
+            printf("%s\n", SAY_MSG_INDEX(buffer));
         }
     }
             
