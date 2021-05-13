@@ -264,13 +264,13 @@ int start_daemon(int gevent_fd) {
         return 0;
     }
     errno = 0;
-    printf("Child process started...\n");
+    //DEBUG*/printf("Child process started...\n");
 
     // Child process: daemon
     close(gevent_fd);
 
     // Open pipe as FD
-    printf("Opening listen channel (daemon): %s\n", to_daemon_fp);
+    //DEBUG*/printf("Opening listen channel (daemon): %s\n", to_daemon_fp);
     int fd_dae_WR = open(to_client_fp, O_NONBLOCK, O_WRONLY);
     int fd_dae_RD = open(to_daemon_fp, O_NONBLOCK, O_RDONLY);
     if (fd_dae_RD < 0 || fd_dae_WR < 0) {
@@ -284,7 +284,7 @@ int start_daemon(int gevent_fd) {
 	struct timeval timeout;
 
     // ========= Monitoring client =========
-    printf("Begin monitoring client...\n");
+    //DEBUG*/printf("Begin monitoring client...\n");
 	while (1)
 	{
 		FD_ZERO(&allfds); //   000000
@@ -304,7 +304,7 @@ int start_daemon(int gevent_fd) {
 
 		} else if (FD_ISSET(fd_dae_RD, &allfds)) {
 			// Start reading from clients
-            printf("Handling message...\n");
+            //DEBUG*/printf("Handling message...\n");
             int succ = handle_client_message(fd_dae_RD, domain_str, to_client_fp, 
                                              to_daemon_fp);
             if (succ == -1) {
