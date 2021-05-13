@@ -208,7 +208,7 @@ int main(int argc, char** argv) {
         FD_ZERO(&allfds);
         FD_SET(gevent_fd, &allfds);
 
-        int ret = select(n_fds, &allfds, NULL, NULL, &tv);
+        int ret = select(n_fds, &allfds, NULL, NULL, NULL);
 
         // Event has occurred
         if (-1 == ret || 0 == ret) { //@todo, what is 0 ?
