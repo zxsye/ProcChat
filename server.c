@@ -94,17 +94,18 @@ pid_t global_et_client(char * msg) {
     //     printf("%d ", msg[i]);
     // }
 
-    for (int i = 0; i < 2048; i++) {
-        printf("%c ", msg[i]);
-    }
+    // for (int i = 0; i < 2048; i++) {
+    //     printf("%c ", msg[i]);
+    // }
 
     // Make domain
     char domain_str[BUF_SIZE];
     strncpy(domain_str, get_domain(msg), DOMAIN_LEN);  // domain is maximum 255
 
+    printf("domain_str: %s\n", domain_str);
     if ( -1 == mkdir(domain_str, 0777) ) {
-        perror("Cannot make directory..."); // domain maps to something
-    }; 
+        perror("Cannot make directory"); // domain maps to something
+    }
 
     // File path to FIFO
     char to_client_fp[BUF_SIZE];
@@ -126,7 +127,7 @@ pid_t global_et_client(char * msg) {
 
     // Starting FIFO
     /*DEBUG*/ printf("%s\n", to_client_fp);
-    /*DEBUG*/ printf("%s\n", to_daemon_fp);
+    //DEBUG*/ printf("%s\n", to_daemon_fp);
     if ( mkfifo(to_client_fp, S_IRWXU | S_IRWXG) == -1 ) {
         printf("Could not make pipe to client (RD)\n");
         return -1;
