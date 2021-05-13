@@ -328,15 +328,15 @@ int main(int argc, char** argv) {
             printf("Stopped daemon !\n");
 
             // Check daemon 
-            // if (dae_ret == -1) {
-            //     //DEBUG*/ printf("Global: Could not initiate daemon.\n");
-            // } else if (dae_ret == 0) {
-            //     //DEBUG*/ printf("Daemon terminated.\n");
-            //     break;
-            //     return 0;   
-            // } else if (1 == dae_ret) {
-            //     continue;
-            // }
+            if (dae_ret == -1) {
+                //DEBUG*/ printf("Global: Could not initiate daemon.\n");
+            } else if (dae_ret == 0) {
+                //DEBUG*/ printf("Daemon terminated.\n");
+                break;
+                return 0;   
+            } else if (1 == dae_ret) {
+                continue;
+            }
         }
     }
     
