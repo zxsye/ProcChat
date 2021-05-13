@@ -7,7 +7,7 @@
 #include <sys/types.h> 
 #include <sys/stat.h>
 #include <sys/time.h>
-// #include <sys/select.h>
+#include <sys/select.h>
 
 #include <errno.h>
 #include <fcntl.h>
@@ -55,60 +55,67 @@ char * get_domain(char * string) {
     return string + DOMAIN_IX;
 }
 
-
-
-int start_daemon(int gevent_fd) {
-    ssize_t nread;
-    char buffer[BUF_SIZE];
-
-    nread = read(gevent_fd, buffer, sizeof(buffer));
-    if (nread == -1) {
-        printf("Failed to read\n");
-        return -1;
-    }
+pid_t global_et_client(char * buffer) {
+	printf("====== daemon starting ======\n");
 
     if (get_type(buffer) != Connect) {
-        printf("Type is not connect\n");
+        printf("\nType is not connect");
         return -1;
     }
+    //DEBUG*/ printf("building client....\n");
+    //DEBUG*/ printf("msg length: %ld\n", strlen(msg + 2));
+    // for (int i = 0; i < 2048; i++) {
+    //     printf("%d ", msg[i]);
+    // }
+
+    // for (int i = 0; i < 2048; i++) {
+    //     printf("%c ", msg[i]);
+    // }
 
     // Make domain
     char domain_str[BUF_SIZE];
     strncpy(domain_str, get_domain(buffer), DOMAIN_LEN);  // domain is maximum 255
 
-    // Make domain directory
+    //DEBUG*/ printf("domain_str: %s\ndomain len: %ld\n", domain_str, strlen(domain_str));
     if ( -1 == mkdir(domain_str, 0777) ) {
-        if (errno == EEXIST) {
-            // Domain exists
-        } else {
-            printf("Domain cannot be created\n");
-            return -1;
-        }
+        //@todo: check exists using errno
+        //DEBUG*/ printf("Domain exists or Cannot be made\n"); // domain maps to something
+        // return -1;
     }
 
     // File path to FIFO
     char to_client_fp[BUF_SIZE];
+    strcpy(to_client_fp, "");
+    //DEBUG*/ printf("Starting string: %s\n", to_client_fp);
     char to_daemon_fp[BUF_SIZE];
-    // strcpy(to_client_fp, "");
 
     strcat(to_client_fp, get_domain(buffer));              // domain
     strcat(to_client_fp, "/");                          // domain/
     strcat(to_client_fp, get_identifier(buffer));          // domain/identifier
     strcat(to_daemon_fp, to_client_fp);                 // domain/identifier
 
+    //DEBUG*/ printf("%s\n", to_client_fp);
+    //DEBUG*/ printf("%s\n", to_daemon_fp);
+
     strcat(to_daemon_fp, "_WR");                        // domain/identifier_RD
     strcat(to_client_fp, "_RD");                        // domain/identifier_RD
     
+    // strncpy(to_client_fp, "\0", 0); // add terminating character no matter what
+    // strncpy(to_daemon_fp, "\0", 0); 
+
     // Starting FIFO
-    if ( mkfifo(to_client_fp, 0777) == -1 ) {
+    //DEBUG*/ printf("%s\n", to_client_fp);
+    //DEBUG*/ printf("%s\n", to_daemon_fp);
+    if ( mkfifo(to_client_fp, S_IRWXU | S_IRWXG) == -1 ) {
+        //DEBUG*/ printf("Could not make pipe to client (RD)\n");
         return -1;
     }
     //DEBUG*/ printf("made PIPE 1\n");
-    if ( mkfifo(to_daemon_fp, 0777) == -1 ) {
+    if ( mkfifo(to_daemon_fp, S_IRWXU | S_IRWXG) == -1 ) {
+        //DEBUG*/ printf("Could not make pipe to daemon (WR)\n");
         return -1;
     }
-
-    return 0;
+    //DEBUG*/ printf("made PIPE 2\n");
 
     // Begin forking...
     pid_t pid = fork();
@@ -145,8 +152,9 @@ int start_daemon(int gevent_fd) {
     }
 
     return 1;
-
 }
+
+
 
 int main() {
 	printf("welcome\n");
@@ -155,7 +163,11 @@ int main() {
 	}
 	printf("Made pipe !\n");
 
-	int gevent_fd = open("gevent", O_RDONLY);
+
+	int gevent_fd;
+	// gevent_fd = 0;
+	gevent_fd = open("gevent", O_RDONLY);
+	
 	if (gevent_fd < 0) {
 		perror("Failed to open gevent FD");
 		return 1;
@@ -163,9 +175,7 @@ int main() {
 	printf("Opened pipe FD !\n");
 
 	fd_set allfds;
-	FD_ZERO(&allfds);
-	FD_SET(gevent_fd, &allfds);
-	int maxfd = 0 + 1;
+	int maxfd = gevent_fd + 1;
 
 	struct timeval timeout;
 
@@ -187,12 +197,7 @@ int main() {
 		} else if (0 == ret) {
 			printf("Nothing to report\n");
 
-		} else {
-			// Read from gevent
-			printf("%d file descriptors ready\n", ret);
-
-			int modified = FD_ISSET(gevent_fd, &allfds);
-			printf("modified: %d\n", modified);
+		} else if (FD_ISSET(gevent_fd, &allfds)) {
 
 			// Start reading
 			char buffer[BUF_SIZE];
@@ -203,8 +208,9 @@ int main() {
 			} else {
 				// buffer[nread] = '\0';
 				printf("received %s\n", buffer);
-				if (strncmp(buffer, "quit", 4) == 0)
-					break;
+				
+				// global_et_client(buffer);
+				
 			}
 		}
 	}
