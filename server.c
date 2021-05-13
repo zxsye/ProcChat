@@ -204,7 +204,7 @@ int main(int argc, char** argv) {
     FD_SET(gevent_fd, &allfds);
     int n_fds = gevent_fd + 1;
     
-    FILE * read_channel = fdopen(gevent_fd, "r"); 
+    // FILE * read_channel = fdopen(gevent_fd, "r"); 
 
     // struct timeval tv;
     //DEBUG*/ int i = 0;
@@ -227,16 +227,16 @@ int main(int argc, char** argv) {
             //DEBUG*/ printf("Reading gevent\n");
             char buf[BUF_SIZE];
 
-            // ssize_t nread;
-            // nread = read(gevent_fd, buf, BUF_SIZE);
-            // if (nread == -1) {
-            //     printf("Failed to read\n");
-            //     continue;
-            // }
-            
-            if (fgets(buf, BUF_SIZE, read_channel) == NULL) {
+            ssize_t nread;
+            nread = read(gevent_fd, buf, BUF_SIZE);
+            if (nread == -1) {
                 printf("Failed to read\n");
+                continue;
             }
+            
+            // if (fgets(buf, BUF_SIZE, read_channel) == NULL) {
+            //     printf("Failed to read\n");
+            // }
 
             int dae_ret = global_et_client(buf);
 
@@ -285,7 +285,7 @@ int main(int argc, char** argv) {
         
     }
     
-    fclose(read_channel); 
+    // fclose(read_channel); 
     close(gevent_fd);
 
     return 0;
