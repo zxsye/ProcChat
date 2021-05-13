@@ -193,7 +193,6 @@ Takes in fd for gevent, reads latest message from pipe to construct new pipes fo
 
 */
 int start_daemon(int gevent_fd) {
-    perror("=====");
     char buffer[BUF_SIZE];
 
     ssize_t nread = read(gevent_fd, buffer, sizeof(buffer));
@@ -243,13 +242,13 @@ int start_daemon(int gevent_fd) {
     // printf("%s\n", to_daemon_fp);
     // @TODO: overwrite existing pipe if needed
     if ( mkfifo(to_client_fp, 0777) == -1 ) {
-        perror("Cannot make pipe to client");
+        // perror("Cannot make pipe to client");
         errno = 0;
         return -1;
     }
     if ( mkfifo(to_daemon_fp, 0777) == -1 ) {
+        // perror("Cannot make pipe to daemon");
         errno = 0;
-        perror("Cannot make pipe to daemon");
         return -1;
     }
 
