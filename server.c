@@ -133,7 +133,7 @@ pid_t global_et_client(char * msg) {
     // strncpy(to_daemon_fp, "\0", 0); 
 
     // Starting FIFO
-    /*DEBUG*/ printf("%s\n", to_client_fp);
+    //DEBUG*/ printf("%s\n", to_client_fp);
     //DEBUG*/ printf("%s\n", to_daemon_fp);
     if ( mkfifo(to_client_fp, S_IRWXU | S_IRWXG) == -1 ) {
         //DEBUG*/ printf("Could not make pipe to client (RD)\n");
@@ -147,39 +147,38 @@ pid_t global_et_client(char * msg) {
     //DEBUG*/ printf("made PIPE 2\n");
 
     // Begin forking...
-    // pid_t pid = fork();
-    // if (pid < 0) {
-    //     printf("\nCould not fork.");
-    //     return -1;
-    // }
+    pid_t pid = fork();
+    if (pid < 0) {
+        printf("\nCould not fork.");
+        return -1;
+    }
 
-    // // Child process: daemon
-    // if (pid == 0) {
-    //     // Open pipe as FD
-    //     int fd_dae_WR = open(to_client_fp, O_NONBLOCK | O_WRONLY);
-    //     int fd_dae_RD = open(to_daemon_fp, O_NONBLOCK | O_WRONLY);
+    // Child process: daemon
+    if (pid == 0) {
+        // Open pipe as FD
+        int fd_dae_WR = open(to_client_fp, O_NONBLOCK | O_WRONLY);
+        int fd_dae_RD = open(to_daemon_fp, O_NONBLOCK | O_WRONLY);
         
-    //     // Reading from client
-    //     if (fd_dae_RD > 0) {
-    //         FILE * read_channel = fdopen(fd_dae_RD, "r");
-    //         char buf[BUF_SIZE];
-    //         while( fgets(buf, BUF_SIZE, read_channel) != NULL ) {
+        // Reading from client
+        if (fd_dae_RD > 0) {
+            FILE * read_channel = fdopen(fd_dae_RD, "r");
+            char buf[BUF_SIZE];
+            while( fgets(buf, BUF_SIZE, read_channel) != NULL ) {
 
-    //         }
-    //         /* After all write ports have been closed (from client side),
-    //          * we exit the loop and will close the read port. */
-    //         fclose( read_channel );
-    //     }
+            }
+            /* After all write ports have been closed (from client side),
+             * we exit the loop and will close the read port. */
+            fclose( read_channel );
+        }
         
-    //     close(fd_dae_WR);
-    //     close(fd_dae_RD);
-    //     return 0;
+        close(fd_dae_WR);
+        close(fd_dae_RD);
+        return 0;
 
-    // } else {
-    // // Global processes: mother
-        
-    //     return -1;
-    // }
+    } else {
+    // Global processes: mother
+        return 1;
+    }
 
     return 1;
 }
