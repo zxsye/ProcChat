@@ -113,6 +113,7 @@ pid_t global_et_client(char * msg) {
 
     // File path to FIFO
     char to_client_fp[BUF_SIZE];
+    printf("Starting string: %s\b", to_client_fp);
     char to_daemon_fp[BUF_SIZE];
 
     strcat(to_client_fp, get_domain(msg));              // domain
