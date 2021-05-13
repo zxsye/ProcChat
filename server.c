@@ -35,6 +35,8 @@
 #define SAY_MSG_INDEX(draft) (draft + 2)
 #define SET_RECEIVE(draft) ( *(short*)draft = Receive)
 
+#define MAX_SIZE 2048
+
 enum type {
     Connect = 0,
     Say = 1,
@@ -122,7 +124,7 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp) {
             strcpy(pipepath, domain);
             strcat(pipepath, "/");
             strcat(pipepath, filename);
-            
+
             int fd = open(filename, O_WRONLY);
             if (fd < 0) {
                 perror("do_say: Error in piping message to other clients");
@@ -187,60 +189,62 @@ Takes in fd for gevent, reads latest message from pipe to construct new pipes fo
 - Return 2: 
 
 */
-int start_daemon(int gevent_fd) {
-    perror("=====");
-    char buffer[BUF_SIZE];
+int start_daemon(int fd) {
+    char buffer[MAX_SIZE];
+    uint16_t type;
+    char identifier_buffer[256];
+    char domain_buffer[1790];
 
-    ssize_t nread = read(gevent_fd, buffer, sizeof(buffer));
-    if (nread == -1) {
-        printf("Failed to read\n");
-        return -1;
+    //reading the type
+    if(read(fd, buffer, MAX_SIZE) == -1){
+        printf("could not read\n");
+        return 1;
     }
-
-    // printf("%s\n", buffer);
-    // return 1;
-
-    if (get_type(buffer) != Connect) {
-        printf("Type is not connect\n");
-        return -1;
+    type = buffer[1];
+    printf("Type is %d\n", type);
+    for(int i = 0; i < 256; i++){
+        identifier_buffer[i] = buffer[2+i];
     }
-
-    // Make domain
-    char domain_str[BUF_SIZE];
-    strncpy(domain_str, get_domain(buffer), DOMAIN_LEN);  // domain is maximum 255
-
-    // Make domain directory
-    if ( -1 == mkdir(domain_str, 0777) ) {
-        if (errno == EEXIST) {
-            // Domain exists
-        } else {
-            printf("Domain cannot be created\n");
-            return -1;
+    for(int i = 0; i < 1790; i++){
+        domain_buffer[i] = buffer[258+i];
+    }
+    char* identifier = identifier_buffer;
+    char* domain = domain_buffer;
+    // printf("Identifier is %s\n", identifier);
+    // printf("Domain is %s\n", domain);
+    if(type == 0){
+        //connect
+        if(mkdir(domain, 0777) == -1){
+            if(errno != EEXIST){
+                printf("failed to create domain\n");
+                return 1;
+            }
+        }
+        char* dirname = strcat(domain, "/");
+        dirname = strcat(dirname, identifier);
+        char dirname_rd[2048];
+        char dirname_wr[2048];
+        strcpy(dirname_rd, dirname);
+        strcpy(dirname_wr, dirname);
+        strcat(dirname_rd, "_RD");
+        strcat(dirname_wr, "_WR");
+        // printf("thid is rd_path %s\n", dirname_rd);
+        if(mkfifo(dirname_rd, 0777) == -1){
+            if (errno != EEXIST) {
+                printf("Could not create read\n");
+                return 1;
+            }
+        }
+        if(mkfifo(dirname_wr, 0777) == -1){
+            if (errno != EEXIST) {
+                printf("Could not create write\n");
+                return 1;
+            }
         }
     }
-
-    // File path to FIFO
-    char to_client_fp[BUF_SIZE];
-    char to_daemon_fp[BUF_SIZE];
-
-    strncpy(to_client_fp, get_domain(buffer), 256);           // domain
-    strcat(to_client_fp, "/");                          // domain/
-
-    strcat(to_client_fp, get_identifier(buffer));          // domain/identifier
-    strcpy(to_daemon_fp, to_client_fp);                 // domain/identifier
-
-    strcat(to_daemon_fp, "_WR");                        // domain/identifier_WR
-    strcat(to_client_fp, "_RD");                        // domain/identifier_RD
-    
-    // Starting FIFO
-    // printf("%s\n", to_client_fp);
-    // printf("%s\n", to_daemon_fp);
-    // @TODO: overwrite existing pipe if needed
-    if ( mkfifo(to_client_fp, 0777) == -1 ) {
-        return -1;
-    }
-    if ( mkfifo(to_daemon_fp, 0777) == -1 ) {
-        return -1;
+    else{
+        printf("Incorrect Type\n");
+        return 1;
     }
 
     // ========== FORKING ========== //
@@ -257,54 +261,54 @@ int start_daemon(int gevent_fd) {
     printf("Child process started...\n");
     perror("");
     // Child process: daemon
-    close(gevent_fd);
+    close(fd);
 
-    // Open pipe as FD
-    printf("Opening listen channel (daemon): %s\n", to_daemon_fp);
-    int fd_dae_WR = open(to_client_fp, O_NONBLOCK, O_WRONLY);
-    int fd_dae_RD = open(to_daemon_fp, O_NONBLOCK, O_RDONLY);
-    if (fd_dae_RD < 0 || fd_dae_WR < 0) {
-		perror("Failed to open gevent FD");
-		return 1;
-	}
+    // // Open pipe as FD
+    // printf("Opening listen channel (daemon): %s\n", to_daemon_fp);
+    // int fd_dae_WR = open(to_client_fp, O_NONBLOCK, O_WRONLY);
+    // int fd_dae_RD = open(to_daemon_fp, O_NONBLOCK, O_RDONLY);
+    // if (fd_dae_RD < 0 || fd_dae_WR < 0) {
+	// 	perror("Failed to open gevent FD");
+	// 	return 1;
+	// }
     
-    // Reading from client
-	fd_set allfds;
-	int maxfd = fd_dae_RD + 1;
-	struct timeval timeout;
+    // // Reading from client
+	// fd_set allfds;
+	// int maxfd = fd_dae_RD + 1;
+	// struct timeval timeout;
 
-    // ========= Monitoring client =========
-    printf("Begin monitoring client...\n");
-	while (1)
-	{
-		FD_ZERO(&allfds); //   000000
-		FD_SET(fd_dae_RD, &allfds); // 100000
+    // // ========= Monitoring client =========
+    // printf("Begin monitoring client...\n");
+	// while (1)
+	// {
+	// 	FD_ZERO(&allfds); //   000000
+	// 	FD_SET(fd_dae_RD, &allfds); // 100000
         
-		timeout.tv_sec = 2;
-		timeout.tv_usec = 0;
+	// 	timeout.tv_sec = 2;
+	// 	timeout.tv_usec = 0;
 		
-		int ret = select(maxfd, &allfds, NULL, NULL, &timeout);
+	// 	int ret = select(maxfd, &allfds, NULL, NULL, &timeout);
 
-		if (-1 == ret) {
-			fprintf(stderr, "Error from select");	
-            //@todo: return here
-		} else if (0 == ret) {
-			perror("Client said nothing...");
+	// 	if (-1 == ret) {
+	// 		fprintf(stderr, "Error from select");	
+    //         //@todo: return here
+	// 	} else if (0 == ret) {
+	// 		perror("Client said nothing...");
 
-		} else if (FD_ISSET(fd_dae_RD, &allfds)) {
-			// Start reading from clients
-            printf("Handling message...\n");
-            int succ = handle_client_message(fd_dae_RD, domain_str, to_client_fp, 
-                                             to_daemon_fp);
-            if (succ == -1) {
-                return -1; //@TODO: change to something else
-            }
+	// 	} else if (FD_ISSET(fd_dae_RD, &allfds)) {
+	// 		// Start reading from clients
+    //         printf("Handling message...\n");
+    //         int succ = handle_client_message(fd_dae_RD, domain_str, to_client_fp, 
+    //                                          to_daemon_fp);
+    //         if (succ == -1) {
+    //             return -1; //@TODO: change to something else
+    //         }
 
-		}
-	}
+	// 	}
+	// }
     
-    close(fd_dae_WR);
-    close(fd_dae_RD);
+    // close(fd_dae_WR);
+    // close(fd_dae_RD);
 
     return 1;
 }
