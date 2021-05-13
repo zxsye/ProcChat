@@ -87,6 +87,7 @@ int daemon(int fd_dae_WR, int fd_dae_RD) {
 pid_t global_et_client(char * msg) {
     // Try connecting
     if (get_type(msg) != Connect) {
+        perror("Type is not connect");
         return -1;
     }
 
@@ -102,9 +103,10 @@ pid_t global_et_client(char * msg) {
     char domain_str[BUF_SIZE];
     strncpy(domain_str, get_domain(msg), DOMAIN_LEN);  // domain is maximum 255
 
-    printf("domain_str: %s\n", domain_str);
     if ( -1 == mkdir(domain_str, 0777) ) {
-        perror("Cannot make directory"); // domain maps to something
+        printf("domain_str: %s\n", domain_str);
+        perror("I cannot make directory"); // domain maps to something
+        return -1;
     }
 
     // File path to FIFO
@@ -204,14 +206,17 @@ int main(int argc, char** argv) {
 
         if (-1 == ret || 0 == ret) { //@todo, what is 0 ?
             perror("select() failed");
-            
+
         } else if (FD_ISSET(gevent_fd, &allfds)) {
+
             ssize_t nread;
             nread = read(gevent_fd, buf, BUF_SIZE);
+            if (nread == -1) {
+                perror("Failed to read");
+                continue;
+            }
             buf[nread] = '\0'; // @TODO: necessary ?
-
             int dae_ret = global_et_client(buf);
-
             if (dae_ret == -1) {
                 perror("Global: Could not initiate daemon.");
                 continue;
