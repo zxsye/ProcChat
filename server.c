@@ -30,16 +30,20 @@
 #define IDEN_LEN 256    // max = 255 char with 1 for null byte
 #define DOMAIN_LEN 256  // max = 255 char with 1 for null byte
 
-#define MSG_INDEX(buffer) (buffer + 2)
+#define RECEIVE_MSG_INDEX(draft) (draft + 2 + 256)
+#define RECEIVE_ID_INDEX(draft) (draft + 2)
+#define SAY_MSG_INDEX(draft) (draft + 2)
+#define SET_RECEIVE(draft) ( *(short*)draft = Receive)
 
 enum type {
-    Connect,
-    Say,
-    Saycount,
-    Recvcont,
-    Disconnect,
-    Ping,
-    Pong
+    Connect = 0,
+    Say = 1,
+    Saycount = 2,
+    Receive = 3,
+    Recvcont = 4,
+    Disconnect = 7,
+    Ping = 5,
+    Pong = 6
 };
 
 enum type get_type(char * string) {
@@ -86,117 +90,10 @@ int daemon(int fd_dae_WR, int fd_dae_RD) {
     return 0;
 }
 
-/*  Takes in "2046 + 7 = 2047" characters to setup DAEMON.
- *      - Creates domain (if non-existant)
- *      - Creates two FIFOs (read and write), connecting DAEMON <-> client
- *      - Starts DAEMON function: monitors read pipe
- *
- *  Return: 0 = child terminated
- *          1 = success
- *          -1 = fail
- */
-pid_t global_et_client(char * buffer) {
-    // Try connecting
-    if (get_type(buffer) != Connect) {
-        printf("\nType is not connect");
-        return -1;
-    }
-    //DEBUG*/ printf("building client....\n");
-    //DEBUG*/ printf("msg length: %ld\n", strlen(msg + 2));
-    // for (int i = 0; i < 2048; i++) {
-    //     printf("%d ", msg[i]);
-    // }
-
-    // for (int i = 0; i < 2048; i++) {
-    //     printf("%c ", msg[i]);
-    // }
-
-    // Make domain
-    char domain_str[BUF_SIZE];
-    strncpy(domain_str, get_domain(buffer), DOMAIN_LEN);  // domain is maximum 255
-
-    //DEBUG*/ printf("domain_str: %s\ndomain len: %ld\n", domain_str, strlen(domain_str));
-    if ( -1 == mkdir(domain_str, 0777) ) {
-        //@todo: check exists using errno
-        //DEBUG*/ printf("Domain exists or Cannot be made\n"); // domain maps to something
-        // return -1;
-    }
-
-    // File path to FIFO
-    char to_client_fp[BUF_SIZE];
-    strcpy(to_client_fp, "");
-    //DEBUG*/ printf("Starting string: %s\n", to_client_fp);
-    char to_daemon_fp[BUF_SIZE];
-
-    strcat(to_client_fp, get_domain(buffer));              // domain
-    strcat(to_client_fp, "/");                          // domain/
-    strcat(to_client_fp, get_identifier(buffer));          // domain/identifier
-    strcat(to_daemon_fp, to_client_fp);                 // domain/identifier
-
-    //DEBUG*/ printf("%s\n", to_client_fp);
-    //DEBUG*/ printf("%s\n", to_daemon_fp);
-
-    strcat(to_daemon_fp, "_WR");                        // domain/identifier_RD
-    strcat(to_client_fp, "_RD");                        // domain/identifier_RD
-    
-    // strncpy(to_client_fp, "\0", 0); // add terminating character no matter what
-    // strncpy(to_daemon_fp, "\0", 0); 
-
-    // Starting FIFO
-    //DEBUG*/ printf("%s\n", to_client_fp);
-    //DEBUG*/ printf("%s\n", to_daemon_fp);
-    if ( mkfifo(to_client_fp, S_IRWXU | S_IRWXG) == -1 ) {
-        //DEBUG*/ printf("Could not make pipe to client (RD)\n");
-        return -1;
-    }
-    //DEBUG*/ printf("made PIPE 1\n");
-    if ( mkfifo(to_daemon_fp, S_IRWXU | S_IRWXG) == -1 ) {
-        //DEBUG*/ printf("Could not make pipe to daemon (WR)\n");
-        return -1;
-    }
-    //DEBUG*/ printf("made PIPE 2\n");
-
-    // Begin forking...
-    pid_t pid = fork();
-    if (pid < 0) {
-        printf("\nCould not fork.");
-        return -1;
-    }
-
-    // Child process: daemon
-    if (pid == 0) {
-        // Open pipe as FD
-        int fd_dae_WR = open(to_client_fp, O_NONBLOCK | O_WRONLY);
-        int fd_dae_RD = open(to_daemon_fp, O_NONBLOCK | O_WRONLY);
-        
-        // Reading from client
-        if (fd_dae_RD > 0) {
-            FILE * read_channel = fdopen(fd_dae_RD, "r");
-            char buf[BUF_SIZE];
-            while( fgets(buf, BUF_SIZE, read_channel) != NULL ) {
-
-            }
-            /* After all write ports have been closed (from client side),
-             * we exit the loop and will close the read port. */
-            fclose( read_channel );
-        }
-        
-        close(fd_dae_WR);
-        close(fd_dae_RD);
-        return 0;
-
-    } else {
-    // Global processes: mother
-        return 1;
-    }
-
-    return 1;
-}
-
 /*
 Takes in buffer for maximum 2048 characters.
 */
-int do_say(char * buffer, const char * domain, const char * to_client_fp) {
+int do_say(char * buffer, const char * domain, const char * to_daemon_fp) {
     // Find all other client handlers in current domain
     struct dirent *de;              // Pointer for directory entry
     DIR *dr = opendir(domain);      // opendir() returns a pointer of DIR type. 
@@ -211,19 +108,26 @@ int do_say(char * buffer, const char * domain, const char * to_client_fp) {
         long pp_len = strlen(pipe_path);
         
         // Skip write pipes to own client
-        if (strcmp(pipe_path, to_client_fp)) {  
+        if (strcmp(pipe_path, to_daemon_fp)) {  
             continue;
         }
 
-        // Only write to WR pipes
-        if (pipe_path[pp_len - 2] == 'R' && pipe_path[pp_len - 1] == 'D') {
+        // Only write to WR pipes: we need to WRITE to other daemons
+        if (pipe_path[pp_len - 2] == 'W' && pipe_path[pp_len - 1] == 'R') {
+
             int fd = open(pipe_path, O_WRONLY);
             if (fd < 0) {
                 perror("do_say: Error in piping message to other clients");
                 return -1;
             }
             // Write to other pipes
-            write(fd, MSG_INDEX(buffer), strlen( MSG_INDEX(buffer) ) + 1);
+            // RECEIVE <identifier> <message>
+            char draft[BUF_SIZE];
+            SET_RECEIVE(draft);
+            strcat(draft, get_identifier(buffer));
+            strcat(draft, SAY_MSG_INDEX(buffer));
+
+            write(fd, draft, strlen( draft ) + 1);
         }
     }
             
@@ -233,6 +137,7 @@ int do_say(char * buffer, const char * domain, const char * to_client_fp) {
 
 /*
 Return 0 = good handling
+
 */
 int handle_client_message(int fd_dae_RD, const char * domain, 
                           const char * to_client_fp, 
@@ -246,13 +151,14 @@ int handle_client_message(int fd_dae_RD, const char * domain,
     }
     
     // Check message type
-    if (get_type(buffer) == Say) {
+    if ( get_type(buffer) == Say) {
+        do_say(buffer, domain, to_daemon_fp); // write to other daemons
 
-        do_say(buffer, domain, to_client_fp);
+    } else if ( get_type(buffer) == Saycount) {
 
-    } else if (get_type(buffer) == Saycount) {
-
-    }
+    } else if ( get_type(buffer) == Receive) {
+        do_receive(buffer, domain, to_client_fp);
+    } 
 
 
 
@@ -311,7 +217,7 @@ int start_daemon(int gevent_fd) {
     strcat(to_client_fp, get_identifier(buffer));          // domain/identifier
     strcpy(to_daemon_fp, to_client_fp);                 // domain/identifier
 
-    strcat(to_daemon_fp, "_WR");                        // domain/identifier_RD
+    strcat(to_daemon_fp, "_WR");                        // domain/identifier_WR
     strcat(to_client_fp, "_RD");                        // domain/identifier_RD
     
     // Starting FIFO
@@ -345,18 +251,17 @@ int start_daemon(int gevent_fd) {
     // Open pipe as FD
     int fd_dae_WR = open(to_client_fp, O_WRONLY);
     int fd_dae_RD = open(to_daemon_fp, O_RDONLY);
-    
-    // Reading from client
     if (fd_dae_RD < 0 || fd_dae_WR < 0) {
 		perror("Failed to open gevent FD");
 		return 1;
 	}
-
-	int maxfd = fd_dae_RD + 1;
-
+    
+    // Reading from client
 	fd_set allfds;
+	int maxfd = fd_dae_RD + 1;
 	struct timeval timeout;
 
+    // ========= Monitoring client =========
 	while (1)
 	{
 		FD_ZERO(&allfds); //   000000
@@ -379,12 +284,6 @@ int start_daemon(int gevent_fd) {
             if (succ == -1) {
                 return -1; //@TODO: change to something else
             }
-
-			if (-1 == nread) {
-				perror("failed to read");
-			} else {
-				printf("received %s\n", buffer);
-			}
 
 		}
 	}
