@@ -1,5 +1,3 @@
-#define _POSIX_SOURCE
-
 #include "server.h"
 #include <stdint.h>
 #include <stdio.h> 
@@ -86,9 +84,9 @@ int daemon(int fd_dae_WR, int fd_dae_RD) {
  *          1 = success
  *          -1 = fail
  */
-pid_t global_et_client(char * msg) {
+pid_t global_et_client(char * buffer) {
     // Try connecting
-    if (get_type(msg) != Connect) {
+    if (get_type(buffer) != Connect) {
         printf("\nType is not connect");
         return -1;
     }
@@ -104,7 +102,7 @@ pid_t global_et_client(char * msg) {
 
     // Make domain
     char domain_str[BUF_SIZE];
-    strncpy(domain_str, get_domain(msg), DOMAIN_LEN);  // domain is maximum 255
+    strncpy(domain_str, get_domain(buffer), DOMAIN_LEN);  // domain is maximum 255
 
     //DEBUG*/ printf("domain_str: %s\ndomain len: %ld\n", domain_str, strlen(domain_str));
     if ( -1 == mkdir(domain_str, 0777) ) {
@@ -119,9 +117,9 @@ pid_t global_et_client(char * msg) {
     //DEBUG*/ printf("Starting string: %s\n", to_client_fp);
     char to_daemon_fp[BUF_SIZE];
 
-    strcat(to_client_fp, get_domain(msg));              // domain
+    strcat(to_client_fp, get_domain(buffer));              // domain
     strcat(to_client_fp, "/");                          // domain/
-    strcat(to_client_fp, get_identifier(msg));          // domain/identifier
+    strcat(to_client_fp, get_identifier(buffer));          // domain/identifier
     strcat(to_daemon_fp, to_client_fp);                 // domain/identifier
 
     //DEBUG*/ printf("%s\n", to_client_fp);
@@ -184,6 +182,96 @@ pid_t global_et_client(char * msg) {
     return 1;
 }
 
+int start_daemon(int gevent_fd) {
+    ssize_t nread;
+    char buffer[BUF_SIZE];
+
+    nread = read(gevent_fd, buffer, sizeof(buffer));
+    if (nread == -1) {
+        printf("Failed to read\n");
+        return -1;
+    }
+
+    if (get_type(buffer) != Connect) {
+        printf("Type is not connect\n");
+        return -1;
+    }
+
+    // Make domain
+    char domain_str[BUF_SIZE];
+    strncpy(domain_str, get_domain(buffer), DOMAIN_LEN);  // domain is maximum 255
+
+    // Make domain directory
+    if ( -1 == mkdir(domain_str, 0777) ) {
+        if (errno == EEXIST) {
+            // Domain exists
+        } else {
+            printf("Domain cannot be created\n");
+            return -1;
+        }
+    }
+
+    // File path to FIFO
+    char to_client_fp[BUF_SIZE];
+    char to_daemon_fp[BUF_SIZE];
+    // strcpy(to_client_fp, "");
+
+    strcat(to_client_fp, get_domain(buffer));              // domain
+    strcat(to_client_fp, "/");                          // domain/
+    strcat(to_client_fp, get_identifier(buffer));          // domain/identifier
+    strcat(to_daemon_fp, to_client_fp);                 // domain/identifier
+
+    strcat(to_daemon_fp, "_WR");                        // domain/identifier_RD
+    strcat(to_client_fp, "_RD");                        // domain/identifier_RD
+    
+    // Starting FIFO
+    if ( mkfifo(to_client_fp, 0777) == -1 ) {
+        return -1;
+    }
+    //DEBUG*/ printf("made PIPE 1\n");
+    if ( mkfifo(to_daemon_fp, 0777) == -1 ) {
+        return -1;
+    }
+
+    return 0;
+
+    // Begin forking...
+    pid_t pid = fork();
+    if (pid < 0) {
+        printf("\nCould not fork.");
+        return -1;
+    }
+
+    // Child process: daemon
+    if (pid == 0) {
+        // Open pipe as FD
+        int fd_dae_WR = open(to_client_fp, O_NONBLOCK | O_WRONLY);
+        int fd_dae_RD = open(to_daemon_fp, O_NONBLOCK | O_WRONLY);
+        
+        // Reading from client
+        if (fd_dae_RD > 0) {
+            FILE * read_channel = fdopen(fd_dae_RD, "r");
+            char buf[BUF_SIZE];
+            while( fgets(buf, BUF_SIZE, read_channel) != NULL ) {
+
+            }
+            /* After all write ports have been closed (from client side),
+             * we exit the loop and will close the read port. */
+            fclose( read_channel );
+        }
+        
+        close(fd_dae_WR);
+        close(fd_dae_RD);
+        return 0;
+
+    } else {
+    // Global processes: mother
+        return 1;
+    }
+
+    return 1;
+
+}
 
 int main(int argc, char** argv) {
 
@@ -193,8 +281,7 @@ int main(int argc, char** argv) {
     }
 
     // ======== Read `gevent` ========
-    int gevent_fd = open(CHANNEL_NAME, O_NONBLOCK | O_RDONLY);
-
+    int gevent_fd = open(CHANNEL_NAME, O_RDONLY);
     if (gevent_fd < 0) {
         perror("Unable to open fd for gevent");
         return 0;
@@ -208,9 +295,9 @@ int main(int argc, char** argv) {
         // tv.tv_sec = 2;
         // tv.tv_usec = 0;
         fd_set allfds;
-        char buf[BUF_SIZE];
         FD_ZERO(&allfds);
         FD_SET(gevent_fd, &allfds);
+        char buf[BUF_SIZE];
 
         int n_fds = gevent_fd + 1;
         int ret = select(n_fds, &allfds, NULL, NULL, NULL);
@@ -218,68 +305,37 @@ int main(int argc, char** argv) {
         // Event has occurred
         if (-1 == ret || 0 == ret) { //@todo, what is 0 ?
             printf("select has failed\n");
-            continue;
+            return 1;
         }
 
         if ( FD_ISSET(gevent_fd, &allfds) ){
 
+            // Pass to DAEMON
+            printf("Starting daemon...\n");
+            //////////////
             ssize_t nread;
-            nread = read(gevent_fd, buf, sizeof(buf));
+            char buffer[BUF_SIZE];
+
+            nread = read(gevent_fd, buffer, sizeof(buffer));
             if (nread == -1) {
                 printf("Failed to read\n");
-                continue;
+                return -1;
             }
-            
-            printf("%s\n", buf);
-            // if (fgets(buf, BUF_SIZE, read_channel) == NULL) {
-            //     printf("Failed to read\n");
+            ////////////
+            // int dae_ret = start_daemon(gevent_fd);
+            printf("Stopped daemon !\n");
+
+            // Check daemon 
+            // if (dae_ret == -1) {
+            //     //DEBUG*/ printf("Global: Could not initiate daemon.\n");
+            // } else if (dae_ret == 0) {
+            //     //DEBUG*/ printf("Daemon terminated.\n");
+            //     break;
+            //     return 0;   
+            // } else if (1 == dae_ret) {
+            //     continue;
             // }
-
-            // Pass to DAEMON
-            int dae_ret = global_et_client(buf);
-
-            if (dae_ret == -1) {
-                //DEBUG*/ printf("Global: Could not initiate daemon.\n");
-            } else if (dae_ret == 0) {
-                //DEBUG*/ printf("Daemon terminated.\n");
-                break;
-                return 0;   
-            } else if (1 == dae_ret) {
-                continue;
-            }
-           
         }
-        // if(gevent_fd > 0) {
-        //     FILE * read_channel = fdopen(gevent_fd, "r"); 
-        //     char buf[BUF_SIZE]; 
-
-        //     // generate daemon
-        //     int i = 0;
-        //     while (fgets(buf, BUF_SIZE, read_channel) != NULL) {
-        //         //DEBUG*/printf("gevent...\n");
-        //         //@TODO: change to select() ... see notion...
-        //         printf("%d\n", i++);
-        //         int dae_ret = global_et_client(buf);
-
-        //         if (dae_ret == -1) {
-        //             printf("\nGlobal: Could not initiate daemon.");
-        //             continue;
-        //         } else if (dae_ret == 0) {
-        //             /*DEBUG*/printf("Daemon terminated.\n");
-        //             return 0;   
-        //         }
-        //     }
-
-        //     // split string
-        //     // find command id
-        //     // execute command 
-        //     // make new process???
-        //     // set up pipes...
-
-        //     //DEBUG printf("closing pipe...\n");
-        //     fclose(read_channel); 
-        // }
-        
     }
     
     // fclose(read_channel); 
