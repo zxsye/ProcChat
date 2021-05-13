@@ -293,6 +293,7 @@ int start_daemon(int gevent_fd) {
         
 		timeout.tv_sec = 2;
 		timeout.tv_usec = 0;
+        timeout = timeout;
 		
 		int ret = select(maxfd, &allfds, NULL, NULL, NULL);
 
@@ -345,7 +346,8 @@ int main() {
         
 		timeout.tv_sec = 2;
 		timeout.tv_usec = 0;
-		
+		timeout = timeout;
+
 		int ret = select(maxfd, &allfds, NULL, NULL, NULL);
 
 		if (-1 == ret) {
