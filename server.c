@@ -87,7 +87,7 @@ int daemon(int fd_dae_WR, int fd_dae_RD) {
 pid_t global_et_client(char * msg) {
     // Try connecting
     if (get_type(msg) != Connect) {
-        perror("Type is not connect");
+        printf("\nType is not connect");
         return -1;
     }
 
@@ -142,7 +142,7 @@ pid_t global_et_client(char * msg) {
     // Begin forking...
     pid_t pid = fork();
     if (pid < 0) {
-        perror("Could not fork.");
+        printf("\nCould not fork.");
         return -1;
     }
 
@@ -204,7 +204,7 @@ int main(int argc, char** argv) {
         int ret = select(n_fds, &allfds, NULL, NULL, &tv);
 
         if (-1 == ret || 0 == ret) { //@todo, what is 0 ?
-            perror("select() failed");
+            printf("\nselect() failed");
 
         } else if (FD_ISSET(gevent_fd, &allfds)) {
 
@@ -213,7 +213,7 @@ int main(int argc, char** argv) {
 
             nread = read(gevent_fd, buf, BUF_SIZE);
             if (nread == -1) {
-                perror("Failed to read");
+                printf("\nFailed to read");
                 continue;
             }
 
@@ -223,7 +223,7 @@ int main(int argc, char** argv) {
             int dae_ret = global_et_client(buf);
 
             if (dae_ret == -1) {
-                perror("Global: Could not initiate daemon.");
+                printf("\nGlobal: Could not initiate daemon.");
                 continue;
             } else if (dae_ret == 0) {
                 /*DEBUG*/printf("Daemon terminated.\n");
@@ -244,7 +244,7 @@ int main(int argc, char** argv) {
         //         int dae_ret = global_et_client(buf);
 
         //         if (dae_ret == -1) {
-        //             perror("Global: Could not initiate daemon.");
+        //             printf("\nGlobal: Could not initiate daemon.");
         //             continue;
         //         } else if (dae_ret == 0) {
         //             /*DEBUG*/printf("Daemon terminated.\n");
