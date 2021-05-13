@@ -92,7 +92,7 @@ pid_t global_et_client(char * msg) {
         printf("\nType is not connect");
         return -1;
     }
-
+    printf("building client....\n");
     // for (int i = 0; i < 2048; i++) {
     //     printf("%d ", msg[i]);
     // }
