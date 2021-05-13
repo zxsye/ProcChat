@@ -193,8 +193,8 @@ int start_daemon(int gevent_fd) {
         return -1;
     }
 
-    printf("%s\n", buffer);
-    return 1;
+    // printf("%s\n", buffer);
+    // return 1;
 
     if (get_type(buffer) != Connect) {
         printf("Type is not connect\n");
@@ -278,12 +278,12 @@ int start_daemon(int gevent_fd) {
 }
 
 int main() {
-	printf("welcome\n");
+	// printf("welcome\n");
 
 	if ((mkfifo("gevent", 0777) < 0)) {
 		perror("Cannot make fifo");
 	}
-	printf("Made pipe !\n");
+	// printf("Made pipe !\n");
 
 
 	int gevent_fd = open("gevent", O_RDONLY);
@@ -291,7 +291,7 @@ int main() {
 		perror("Failed to open gevent FD");
 		return 1;
 	}
-	printf("Opened pipe FD !\n");
+	// printf("Opened pipe FD !\n");
 
 	int maxfd = gevent_fd + 1;
 
@@ -299,11 +299,11 @@ int main() {
 	struct timeval timeout;
 
 	int i = 0;
-	printf("Starting while loop");
+	// printf("Starting while loop");
 
 	while (1)
 	{
-		printf("%d\n", i++);
+		// printf("%d\n", i++);
 
 		FD_ZERO(&allfds); //   000000
 		FD_SET(gevent_fd, &allfds); // 100000
