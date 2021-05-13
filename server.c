@@ -185,10 +185,9 @@ pid_t global_et_client(char * buffer) {
 }
 
 int start_daemon(int gevent_fd) {
-    ssize_t nread;
     char buffer[BUF_SIZE];
 
-    nread = read(gevent_fd, buffer, sizeof(buffer));
+    ssize_t nread = read(gevent_fd, buffer, sizeof(buffer));
     if (nread == -1) {
         printf("Failed to read\n");
         return -1;
@@ -245,31 +244,31 @@ int start_daemon(int gevent_fd) {
     }
 
     // Child process: daemon
-    if (pid == 0) {
-        // Open pipe as FD
-        int fd_dae_WR = open(to_client_fp, O_NONBLOCK | O_WRONLY);
-        int fd_dae_RD = open(to_daemon_fp, O_NONBLOCK | O_WRONLY);
+    // if (pid == 0) {
+    //     // Open pipe as FD
+    //     int fd_dae_WR = open(to_client_fp, O_NONBLOCK | O_WRONLY);
+    //     int fd_dae_RD = open(to_daemon_fp, O_NONBLOCK | O_WRONLY);
         
-        // Reading from client
-        if (fd_dae_RD > 0) {
-            FILE * read_channel = fdopen(fd_dae_RD, "r");
-            char buf[BUF_SIZE];
-            while( fgets(buf, BUF_SIZE, read_channel) != NULL ) {
+    //     // Reading from client
+    //     if (fd_dae_RD > 0) {
+    //         FILE * read_channel = fdopen(fd_dae_RD, "r");
+    //         char buf[BUF_SIZE];
+    //         while( fgets(buf, BUF_SIZE, read_channel) != NULL ) {
 
-            }
-            /* After all write ports have been closed (from client side),
-             * we exit the loop and will close the read port. */
-            fclose( read_channel );
-        }
+    //         }
+    //         /* After all write ports have been closed (from client side),
+    //          * we exit the loop and will close the read port. */
+    //         fclose( read_channel );
+    //     }
         
-        close(fd_dae_WR);
-        close(fd_dae_RD);
-        return 0;
+    //     close(fd_dae_WR);
+    //     close(fd_dae_RD);
+    //     return 0;
 
-    } else {
-    // Global processes: mother
-        return 1;
-    }
+    // } else {
+    // // Global processes: mother
+    //     return 1;
+    // }
 
     return 1;
 
@@ -277,37 +276,38 @@ int start_daemon(int gevent_fd) {
 
 int main() {
 	printf("welcome\n");
+
 	if ((mkfifo("gevent", 0777) < 0)) {
 		perror("Cannot make fifo");
 	}
 	printf("Made pipe !\n");
 
 
-	int gevent_fd;
-	// gevent_fd = 0;
-	gevent_fd = open("gevent", O_RDONLY);
-	
+	int gevent_fd = open("gevent", O_RDONLY);
 	if (gevent_fd < 0) {
 		perror("Failed to open gevent FD");
 		return 1;
 	}
 	printf("Opened pipe FD !\n");
 
-	fd_set allfds;
 	int maxfd = gevent_fd + 1;
 
+	fd_set allfds;
 	struct timeval timeout;
 
 	int i = 0;
 	printf("Starting while loop");
+
 	while (1)
 	{
 		printf("%d\n", i++);
+
+		FD_ZERO(&allfds); //   000000
+		FD_SET(gevent_fd, &allfds); // 100000
+        
 		timeout.tv_sec = 2;
 		timeout.tv_usec = 0;
 		
-		FD_ZERO(&allfds); //   000000
-		FD_SET(gevent_fd, &allfds); // 100000
 		int ret = select(maxfd, &allfds, NULL, NULL, &timeout);
 
 		if (-1 == ret) {
@@ -319,18 +319,19 @@ int main() {
 		} else if (FD_ISSET(gevent_fd, &allfds)) {
 
 			// Start reading
-			char buffer[BUF_SIZE];
-			int nread = read(gevent_fd, buffer, BUF_SIZE);
+            start_daemon(gevent_fd);
 
-			if (-1 == nread) {
-				perror("failed to read");
-			} else {
-				// buffer[nread] = '\0';
-				printf("received %s\n", buffer);
+			// char buffer[BUF_SIZE];
+			// int nread = read(gevent_fd, buffer, BUF_SIZE);
+
+			// if (-1 == nread) {
+			// 	perror("failed to read");
+			// } else {
+			// 	// buffer[nread] = '\0';
+			// 	printf("received %s\n", buffer);
+			// 	// global_et_client(buffer);
 				
-				// global_et_client(buffer);
-				
-			}
+			// }
 		}
 	}
 

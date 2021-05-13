@@ -134,14 +134,14 @@ int main(int argc, char** argv) {
                 return 1;
             }
             
-            char buffer[3000];
-            int nread = read(fd, buffer, sizeof(buffer));
-            printf("received %s\n", buffer);
+            // char buffer[3000];
+            // int nread = read(fd, buffer, sizeof(buffer));
+            // printf("received %s\n", buffer);
             
-            // if(create_connection(fd) == 1){
-            //     printf("failed to create connection\n");
-            //     return 1;
-            // }
+            if(create_connection(fd) == 1){
+                printf("failed to create connection\n");
+                return 1;
+            }
         }
 
         
