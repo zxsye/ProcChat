@@ -194,14 +194,18 @@ int main(int argc, char** argv) {
 
     // ======== Read `gevent` ========
     int gevent_fd = open(CHANNEL_NAME, O_NONBLOCK | O_RDONLY);
-    
-    fd_set allfds;
+    if (gevent_fd < 0) {
+        perror("Unable to open fd for gevent");
+        return 0;
+    }
 
+    fd_set allfds;
     FD_ZERO(&allfds);
     FD_SET(gevent_fd, &allfds);
-
     int n_fds = gevent_fd + 1;
     
+    FILE * read_channel = fdopen(gevent_fd, "r"); 
+
     // struct timeval tv;
     int i = 0;
     while (1) {
@@ -224,13 +228,16 @@ int main(int argc, char** argv) {
             char buf[BUF_SIZE];
             ssize_t nread;
 
-            nread = read(gevent_fd, buf, BUF_SIZE);
-            if (nread == -1) {
+            // nread = read(gevent_fd, buf, BUF_SIZE);
+            // if (nread == -1) {
+            //     printf("Failed to read\n");
+            //     continue;
+            // }
+            
+            if (fgets(buf, BUF_SIZE, read_channel) == NULL) {
                 printf("Failed to read\n");
-                continue;
             }
-
-            // buf[nread] = '\0'; // @TODO: necessary ?
+            
             int dae_ret = global_et_client(buf);
 
             if (dae_ret == -1) {
