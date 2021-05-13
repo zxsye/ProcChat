@@ -201,7 +201,7 @@ int start_daemon(int fd) {
         return 1;
     }
     type = buffer[1];
-    printf("Type is %d\n", type);
+    // printf("Type is %d\n", type);
     for(int i = 0; i < 256; i++){
         identifier_buffer[i] = buffer[2+i];
     }
@@ -258,8 +258,8 @@ int start_daemon(int fd) {
     if (pid != 0) {
         return 0;
     }
-    printf("Child process started...\n");
-    perror("");
+    // printf("Child process started...\n");
+    // perror("");
     // Child process: daemon
     close(fd);
 
