@@ -200,12 +200,12 @@ int main(int argc, char** argv) {
 
     int n_fds = gevent_fd + 1;
     
-    struct timeval tv;
+    // struct timeval tv;
 
     while (1) {
     
-        tv.tv_sec = 2;
-        tv.tv_usec = 0;
+        // tv.tv_sec = 2;
+        // tv.tv_usec = 0;
 
         FD_ZERO(&allfds);
         FD_SET(gevent_fd, &allfds);
