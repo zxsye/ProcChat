@@ -105,9 +105,9 @@ pid_t global_et_client(char * msg) {
     char domain_str[BUF_SIZE];
     strncpy(domain_str, get_domain(msg), DOMAIN_LEN);  // domain is maximum 255
 
-    printf("domain_str: %s\ndomain len: %ld", domain_str, strlen(domain_str));
+    printf("domain_str: %s\ndomain len: %ld\n", domain_str, strlen(domain_str));
     if ( -1 == mkdir(domain_str, 0777) ) {
-        printf("Domain exists or Cannot be made"); // domain maps to something
+        printf("Domain exists or Cannot be made\n"); // domain maps to something
         // return -1;
     }
 
