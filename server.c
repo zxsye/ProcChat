@@ -199,7 +199,7 @@ int main(int argc, char** argv) {
         FD_ZERO(&allfds);
         FD_SET(gevent_fd, &allfds);
 
-        tv.tv_sec = 1;
+        tv.tv_sec = 10;
         tv.tv_usec = 0;
 
         int ret = select(n_fds, &allfds, NULL, NULL, &tv);
