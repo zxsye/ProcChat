@@ -104,6 +104,7 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp) {
     }
   
     while ((de = readdir(dr)) != NULL) {
+        printf("%s\n", de->d_name);
         char * pipe_path = de->d_name;
         long pp_len = strlen(pipe_path);
         
@@ -154,6 +155,7 @@ int handle_client_message(int fd_dae_RD, const char * domain,
     
     // Check message type
     if ( get_type(buffer) == Say) {
+        printf("doing say");
         do_say(buffer, domain, to_daemon_fp); // write to other daemons
 
     } else if ( get_type(buffer) == Saycount) {
@@ -251,47 +253,47 @@ int start_daemon(int gevent_fd) {
     close(gevent_fd);
 
     // Open pipe as FD
-    // int fd_dae_WR = open(to_client_fp, O_WRONLY);
-    // int fd_dae_RD = open(to_daemon_fp, O_RDONLY);
-    // if (fd_dae_RD < 0 || fd_dae_WR < 0) {
-	// 	perror("Failed to open gevent FD");
-	// 	return 1;
-	// }
+    int fd_dae_WR = open(to_client_fp, O_WRONLY);
+    int fd_dae_RD = open(to_daemon_fp, O_RDONLY);
+    if (fd_dae_RD < 0 || fd_dae_WR < 0) {
+		perror("Failed to open gevent FD");
+		return 1;
+	}
     
-    // // Reading from client
-	// fd_set allfds;
-	// int maxfd = fd_dae_RD + 1;
-	// struct timeval timeout;
+    // Reading from client
+	fd_set allfds;
+	int maxfd = fd_dae_RD + 1;
+	struct timeval timeout;
 
-    // // ========= Monitoring client =========
-	// while (1)
-	// {
-	// 	FD_ZERO(&allfds); //   000000
-	// 	FD_SET(fd_dae_RD, &allfds); // 100000
+    // ========= Monitoring client =========
+	while (1)
+	{
+		FD_ZERO(&allfds); //   000000
+		FD_SET(fd_dae_RD, &allfds); // 100000
         
-	// 	timeout.tv_sec = 2;
-	// 	timeout.tv_usec = 0;
+		timeout.tv_sec = 2;
+		timeout.tv_usec = 0;
 		
-	// 	int ret = select(maxfd, &allfds, NULL, NULL, &timeout);
+		int ret = select(maxfd, &allfds, NULL, NULL, &timeout);
 
-	// 	if (-1 == ret) {
-	// 		fprintf(stderr, "Error from select");	
-	// 	} else if (0 == ret) {
-	// 		perror("Nothing to report");
+		if (-1 == ret) {
+			fprintf(stderr, "Error from select");	
+		} else if (0 == ret) {
+			perror("Nothing to report");
 
-	// 	} else if (FD_ISSET(fd_dae_RD, &allfds)) {
-	// 		// Start reading from clients
-    //         int succ = handle_client_message(fd_dae_RD, domain_str, to_client_fp, 
-    //                                          to_daemon_fp);
-    //         if (succ == -1) {
-    //             return -1; //@TODO: change to something else
-    //         }
+		} else if (FD_ISSET(fd_dae_RD, &allfds)) {
+			// Start reading from clients
+            int succ = handle_client_message(fd_dae_RD, domain_str, to_client_fp, 
+                                             to_daemon_fp);
+            if (succ == -1) {
+                return -1; //@TODO: change to something else
+            }
 
-	// 	}
-	// }
+		}
+	}
     
-    // close(fd_dae_WR);
-    // close(fd_dae_RD);
+    close(fd_dae_WR);
+    close(fd_dae_RD);
     return 1;
 }
 
