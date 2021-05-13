@@ -235,8 +235,6 @@ int start_daemon(int gevent_fd) {
         return -1;
     }
 
-
-
     // ========== FORKING ========== //
     pid_t pid = fork();
     if (pid < 0) {
@@ -302,7 +300,7 @@ int start_daemon(int gevent_fd) {
 }
 
 int main() {
-    printf("hello");
+    // printf("hello");
 	if ((mkfifo("gevent", 0777) < 0)) {
 		perror("Cannot make fifo");
 	}
@@ -350,47 +348,3 @@ int main() {
     // run_daemon(int fd_RD, int fd_WR);
 	return 0;
 }
-
-
-
-
-
-
-
-    // char arg0[ARG_SIZE];
-	// char arg1[ARG_SIZE];
-	// char buf[BUF_SIZE];
-	// char* n_check = NULL;
-	// pid_t pids[PID_LIST_SIZE];
-	// size_t n_procs = 0;
-	
-	// while(1) {
-	// 	printf("> ");
-	// 	n_check = fgets(buf, BUF_SIZE, stdin);
-	// 	// sscanf(buf, "%s %s", arg0, arg1);
-		
-	// 	for(size_t i = 0; i < PID_LIST_SIZE; i++) {
-
-	// 		// Check on all children
-	// 		int status = 0;
-	// 		if(waitpid(pids[i], &status, WNOHANG) == -1) {
-	// 			shift_down(pids, PID_LIST_SIZE, i);
-	// 		}
-	// 		// Have to check for exit status
-	// 		if(WIFEXITED(status)) {
-	// 			shift_down(pids, PID_LIST_SIZE, i);
-	// 		}
-	// 	}
-		
-	// 	// if(strcmp(arg0, "exit") == 0) {
-	// 	// 	break;
-	// 	// }
-		
-	// 	if(n_check != NULL) {
-	// 		pid_t pid = fork();
-	// 		if(pid == 0) {
-	// 			snprintf(buf, BUF_SIZE, BIN_PATH"%s", arg0);
-	// 			execl(buf, arg0, arg1, NULL);
-	// 			return 0;
-	// 		}
-	// 	}
