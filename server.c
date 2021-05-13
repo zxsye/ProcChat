@@ -187,7 +187,7 @@ pid_t global_et_client(char * msg) {
 int main(int argc, char** argv) {
 
     // Open "gevent" FIFO pipe
-    if((mkfifo(CHANNEL_NAME, S_IRWXU | S_IRWXG)) < 0) {
+    if((mkfifo(CHANNEL_NAME, 0777)) < 0) {
         fprintf(stderr, "Unable to open pipe");
     }
 
