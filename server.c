@@ -6,6 +6,8 @@
 #include <stdlib.h> 
 #include <string.h>
 
+#include <dirent.h> // for directory reading
+
 #include <sys/types.h> 
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -28,10 +30,12 @@
 #define IDEN_LEN 256    // max = 255 char with 1 for null byte
 #define DOMAIN_LEN 256  // max = 255 char with 1 for null byte
 
+#define MSG_INDEX(buffer) (buffer + 2)
 
 enum type {
     Connect,
     Say,
+    Saycount,
     Recvcont,
     Disconnect,
     Ping,
@@ -45,6 +49,11 @@ enum type get_type(char * string) {
     }
     return -1;
 }
+
+typedef struct pipeline {
+    int to_client_fp;
+    int to_daemon_fp;
+} Pipeline;
 
 // Return pointer to first character of "identifier"
 char * get_identifier(char * string) {
@@ -184,6 +193,83 @@ pid_t global_et_client(char * buffer) {
     return 1;
 }
 
+/*
+Takes in buffer for maximum 2048 characters.
+*/
+int do_say(char * buffer, const char * domain, const char * to_client_fp) {
+    // Find all other client handlers in current domain
+    struct dirent *de;              // Pointer for directory entry
+    DIR *dr = opendir(domain);      // opendir() returns a pointer of DIR type. 
+  
+    if (dr == NULL) { // opendir returns NULL if couldn't open directory
+        printf("Could not open current directory" );
+        return -1;
+    }
+  
+    while ((de = readdir(dr)) != NULL) {
+        char * pipe_path = de->d_name;
+        long pp_len = strlen(pipe_path);
+        
+        // Skip write pipes to own client
+        if (strcmp(pipe_path, to_client_fp)) {  
+            continue;
+        }
+
+        // Only write to WR pipes
+        if (pipe_path[pp_len - 2] == 'R' && pipe_path[pp_len - 1] == 'D') {
+            int fd = open(pipe_path, O_WRONLY);
+            if (fd < 0) {
+                perror("do_say: Error in piping message to other clients");
+                return -1;
+            }
+            // Write to other pipes
+            write(fd, MSG_INDEX(buffer), strlen( MSG_INDEX(buffer) ) + 1);
+        }
+    }
+            
+    closedir(dr);
+    return 0;
+}
+
+/*
+Return 0 = good handling
+*/
+int handle_client_message(int fd_dae_RD, const char * domain, 
+                          const char * to_client_fp, 
+                          const char * to_daemon_fp)
+{
+    char buffer[BUF_SIZE];
+    int nread = read(fd_dae_RD, buffer, BUF_SIZE);
+    if (nread == -1) {
+        printf("Failed to read\n");
+        return -1;
+    }
+    
+    // Check message type
+    if (get_type(buffer) == Say) {
+
+        do_say(buffer, domain, to_client_fp);
+
+    } else if (get_type(buffer) == Saycount) {
+
+    }
+
+
+
+
+
+    return 0;
+}
+
+/*
+Takes in fd for gevent, reads latest message from pipe to construct new pipes for client.
+
+- Return -1: tell parent failure
+- Return 0: tell parent of birth success 
+- Return 1: tell child's main of suicide
+- Return 2: 
+
+*/
 int start_daemon(int gevent_fd) {
     char buffer[BUF_SIZE];
 
@@ -218,11 +304,11 @@ int start_daemon(int gevent_fd) {
     // File path to FIFO
     char to_client_fp[BUF_SIZE];
     char to_daemon_fp[BUF_SIZE];
+    strcat(to_client_fp, "/");                          // domain/
     // strcpy(to_client_fp, "");
 
-    strcpy(to_client_fp, get_domain(buffer));           // domain
-    
-    strcat(to_client_fp, "/");                          // domain/
+    strncpy(to_client_fp, get_domain(buffer), 256);           // domain
+
     strcat(to_client_fp, get_identifier(buffer));          // domain/identifier
     strcpy(to_daemon_fp, to_client_fp);                 // domain/identifier
 
@@ -230,82 +316,99 @@ int start_daemon(int gevent_fd) {
     strcat(to_client_fp, "_RD");                        // domain/identifier_RD
     
     // Starting FIFO
+    // @TODO: overwrite existing pipe if needed
     if ( mkfifo(to_client_fp, 0777) == -1 ) {
         return -1;
     }
-    //DEBUG*/ printf("made PIPE 1\n");
     if ( mkfifo(to_daemon_fp, 0777) == -1 ) {
         return -1;
     }
 
-    return 0;
 
-    // Begin forking...
-    // pid_t pid = fork();
-    // if (pid < 0) {
-    //     printf("\nCould not fork.");
-    //     return -1;
-    // }
+    // ========== FORKING ========== //
+    pid_t pid = fork();
+    if (pid < 0) {
+        printf("Could not fork\n");
+        return -1;
+    }
+
+    // Tell parent success
+    if (pid != 0) {
+        return 0;
+    }
 
     // Child process: daemon
-    // if (pid == 0) {
-    //     // Open pipe as FD
-    //     int fd_dae_WR = open(to_client_fp, O_NONBLOCK | O_WRONLY);
-    //     int fd_dae_RD = open(to_daemon_fp, O_NONBLOCK | O_WRONLY);
+    close(gevent_fd);
+
+    // Open pipe as FD
+    int fd_dae_WR = open(to_client_fp, O_WRONLY);
+    int fd_dae_RD = open(to_daemon_fp, O_RDONLY);
+    
+    // Reading from client
+    if (fd_dae_RD < 0 || fd_dae_WR < 0) {
+		perror("Failed to open gevent FD");
+		return 1;
+	}
+
+	int maxfd = fd_dae_RD + 1;
+
+	fd_set allfds;
+	struct timeval timeout;
+
+	while (1)
+	{
+		FD_ZERO(&allfds); //   000000
+		FD_SET(fd_dae_RD, &allfds); // 100000
         
-    //     // Reading from client
-    //     if (fd_dae_RD > 0) {
-    //         FILE * read_channel = fdopen(fd_dae_RD, "r");
-    //         char buf[BUF_SIZE];
-    //         while( fgets(buf, BUF_SIZE, read_channel) != NULL ) {
+		timeout.tv_sec = 2;
+		timeout.tv_usec = 0;
+		
+		int ret = select(maxfd, &allfds, NULL, NULL, &timeout);
 
-    //         }
-    //         /* After all write ports have been closed (from client side),
-    //          * we exit the loop and will close the read port. */
-    //         fclose( read_channel );
-    //     }
-        
-    //     close(fd_dae_WR);
-    //     close(fd_dae_RD);
-    //     return 0;
+		if (-1 == ret) {
+			fprintf(stderr, "Error from select");	
+		} else if (0 == ret) {
+			perror("Nothing to report");
 
-    // } else {
-    // // Global processes: mother
-    //     return 1;
-    // }
+		} else if (FD_ISSET(fd_dae_RD, &allfds)) {
+			// Start reading from clients
+            int succ = handle_client_message(fd_dae_RD, domain_str, to_client_fp, 
+                                             to_daemon_fp);
 
-    return 1;
+			if (-1 == nread) {
+				perror("failed to read");
+			} else {
+				printf("received %s\n", buffer);
+			}
 
+		}
+	}
+    
+    close(fd_dae_WR);
+    close(fd_dae_RD);
+    return 0;
 }
 
 int main() {
-	// printf("welcome\n");
 
 	if ((mkfifo("gevent", 0777) < 0)) {
 		perror("Cannot make fifo");
 	}
-	// printf("Made pipe !\n");
-
 
 	int gevent_fd = open("gevent", O_RDONLY);
 	if (gevent_fd < 0) {
 		perror("Failed to open gevent FD");
 		return 1;
 	}
-	// printf("Opened pipe FD !\n");
 
 	int maxfd = gevent_fd + 1;
 
 	fd_set allfds;
 	struct timeval timeout;
 
-	// int i = 0;
-	// printf("Starting while loop");
 
 	while (1)
 	{
-		// printf("%d\n", i++);
-
 		FD_ZERO(&allfds); //   000000
 		FD_SET(gevent_fd, &allfds); // 100000
         
@@ -316,29 +419,18 @@ int main() {
 
 		if (-1 == ret) {
 			fprintf(stderr, "Error from select\n");	
-
 		} else if (0 == ret) {
 			printf("Nothing to report\n");
 
 		} else if (FD_ISSET(gevent_fd, &allfds)) {
-
 			// Start reading
-            start_daemon(gevent_fd);
-
-			// char buffer[BUF_SIZE];
-			// int nread = read(gevent_fd, buffer, BUF_SIZE);
-
-			// if (-1 == nread) {
-			// 	perror("failed to read");
-			// } else {
-			// 	// buffer[nread] = '\0';
-			// 	printf("received %s\n", buffer);
-			// 	// global_et_client(buffer);
-				
-			// }
+            if (start_daemon(gevent_fd) == 0) // child successfully created
+                continue;
 		}
 	}
 
+    
+    // run_daemon(int fd_RD, int fd_WR);
 	return 0;
 }
 
