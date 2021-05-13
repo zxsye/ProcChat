@@ -220,6 +220,7 @@ int main(int argc, char** argv) {
 
         } else if ( FD_ISSET(gevent_fd, &allfds) ) {
 
+            printf("Reading gevent\n");
             char buf[BUF_SIZE];
             ssize_t nread;
 
@@ -230,7 +231,6 @@ int main(int argc, char** argv) {
             }
 
             // buf[nread] = '\0'; // @TODO: necessary ?
-            printf("Reading gevent\n");
             int dae_ret = global_et_client(buf);
 
             if (dae_ret == -1) {
