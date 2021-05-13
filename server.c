@@ -93,7 +93,7 @@ pid_t global_et_client(char * msg) {
         return -1;
     }
     printf("building client....\n");
-    printf("msg length: %ld\n", strlen(msg));
+    printf("msg length: %ld\n", strlen(msg + 2));
     // for (int i = 0; i < 2048; i++) {
     //     printf("%d ", msg[i]);
     // }
@@ -114,6 +114,7 @@ pid_t global_et_client(char * msg) {
 
     // File path to FIFO
     char to_client_fp[BUF_SIZE];
+    strcpy(to_client_fp, "");
     printf("Starting string: %s\n", to_client_fp);
     char to_daemon_fp[BUF_SIZE];
 
