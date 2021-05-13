@@ -207,7 +207,7 @@ int main(int argc, char** argv) {
     FILE * read_channel = fdopen(gevent_fd, "r"); 
 
     // struct timeval tv;
-    int i = 0;
+    //DEBUG*/ int i = 0;
     while (1) {
         //DEBUG*/ printf("\n===== Cycle %d =====\n", i++);
         // tv.tv_sec = 2;
