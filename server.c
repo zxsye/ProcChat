@@ -304,9 +304,9 @@ int start_daemon(int gevent_fd) {
     // File path to FIFO
     char to_client_fp[BUF_SIZE];
     char to_daemon_fp[BUF_SIZE];
-    strcat(to_client_fp, "/");                          // domain/
 
     strncpy(to_client_fp, get_domain(buffer), 256);           // domain
+    strcat(to_client_fp, "/");                          // domain/
 
     strcat(to_client_fp, get_identifier(buffer));          // domain/identifier
     strcpy(to_daemon_fp, to_client_fp);                 // domain/identifier
