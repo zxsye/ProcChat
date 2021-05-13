@@ -324,7 +324,7 @@ int start_daemon(int gevent_fd) {
         return -1;
     }
 
-
+    return 0;
     // ========== FORKING ========== //
     pid_t pid = fork();
     if (pid < 0) {
@@ -377,7 +377,7 @@ int start_daemon(int gevent_fd) {
             if (succ == -1) {
                 return -1; //@TODO: change to something else
             }
-            
+
 			if (-1 == nread) {
 				perror("failed to read");
 			} else {
