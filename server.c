@@ -108,6 +108,7 @@ pid_t global_et_client(char * msg) {
 
     //DEBUG*/ printf("domain_str: %s\ndomain len: %ld\n", domain_str, strlen(domain_str));
     if ( -1 == mkdir(domain_str, 0777) ) {
+        //@todo: check exists using errno
         //DEBUG*/ printf("Domain exists or Cannot be made\n"); // domain maps to something
         // return -1;
     }
@@ -193,38 +194,34 @@ int main(int argc, char** argv) {
 
     // ======== Read `gevent` ========
     int gevent_fd = open(CHANNEL_NAME, O_NONBLOCK | O_RDONLY);
+
     if (gevent_fd < 0) {
         perror("Unable to open fd for gevent");
         return 0;
     }
-
-    fd_set allfds;
-    FD_ZERO(&allfds);
-    FD_SET(gevent_fd, &allfds);
-    int n_fds = gevent_fd + 1;
     
     // FILE * read_channel = fdopen(gevent_fd, "r"); 
-
     // struct timeval tv;
     //DEBUG*/ int i = 0;
     while (1) {
         //DEBUG*/ printf("\n===== Cycle %d =====\n", i++);
         // tv.tv_sec = 2;
         // tv.tv_usec = 0;
-
+        fd_set allfds;
+        char buf[BUF_SIZE];
         FD_ZERO(&allfds);
         FD_SET(gevent_fd, &allfds);
 
+        int n_fds = gevent_fd + 1;
         int ret = select(n_fds, &allfds, NULL, NULL, NULL);
 
         // Event has occurred
         if (-1 == ret || 0 == ret) { //@todo, what is 0 ?
             //DEBUG*/ printf("\nselect() failed");
-
-        } else if ( FD_ISSET(gevent_fd, &allfds) ) {
+            printf("select has failed\n");
+        } else if ( FD_ISSET(gevent_fd, &allfds) ){
 
             //DEBUG*/ printf("Reading gevent\n");
-            char buf[BUF_SIZE];
 
             ssize_t nread;
             nread = read(gevent_fd, buf, BUF_SIZE);
@@ -241,7 +238,6 @@ int main(int argc, char** argv) {
 
             if (dae_ret == -1) {
                 //DEBUG*/ printf("Global: Could not initiate daemon.\n");
-
             } else if (dae_ret == 0) {
                 //DEBUG*/ printf("Daemon terminated.\n");
                 break;
