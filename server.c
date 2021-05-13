@@ -193,6 +193,9 @@ int start_daemon(int gevent_fd) {
         return -1;
     }
 
+    printf("%s\n", buffer);
+    return 1;
+
     if (get_type(buffer) != Connect) {
         printf("Type is not connect\n");
         return -1;
