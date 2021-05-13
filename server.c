@@ -1,4 +1,4 @@
-#define _POSIX_SOURCE
+
 
 #include "server.h"
 #include <stdint.h>
@@ -278,6 +278,7 @@ int start_daemon(int gevent_fd) {
 
 		if (-1 == ret) {
 			fprintf(stderr, "Error from select");	
+            //@todo: return here
 		} else if (0 == ret) {
 			perror("Nothing to report");
 
@@ -294,6 +295,7 @@ int start_daemon(int gevent_fd) {
     
     close(fd_dae_WR);
     close(fd_dae_RD);
+
     return 1;
 }
 
