@@ -105,18 +105,22 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp) {
   
     while ((de = readdir(dr)) != NULL) {
         printf("%s\n", de->d_name);
-        char * pipe_path = de->d_name;
-        long pp_len = strlen(pipe_path);
+        char * filename = de->d_name;
+        long pp_len = strlen(filename);
         
         // Skip write pipes to own client
-        if (strcmp(pipe_path, to_daemon_fp)) {  
+        if (strcmp(filename, to_daemon_fp)) {  
             continue;
         }
 
         // Only write to WR pipes: we need to WRITE to other daemons
-        if (pipe_path[pp_len - 2] == 'W' && pipe_path[pp_len - 1] == 'R') {
-
-            int fd = open(pipe_path, O_WRONLY);
+        if (filename[pp_len - 2] == 'W' && filename[pp_len - 1] == 'R') {
+            char pipepath[BUF_SIZE];
+            strcpy(pipepath, domain);
+            strcat(pipepath, "/");
+            strcat(pipepath, filename);
+            
+            int fd = open(filename, O_WRONLY);
             if (fd < 0) {
                 perror("do_say: Error in piping message to other clients");
                 return -1;
