@@ -299,7 +299,7 @@ int main(int argc, char** argv) {
         fd_set allfds;
         FD_ZERO(&allfds);
         FD_SET(gevent_fd, &allfds);
-        char buf[BUF_SIZE];
+        // char buf[BUF_SIZE];
 
         int n_fds = gevent_fd + 1;
         int ret = select(n_fds, &allfds, NULL, NULL, NULL);
@@ -324,7 +324,7 @@ int main(int argc, char** argv) {
                 return -1;
             }
             ////////////
-            // int dae_ret = start_daemon(gevent_fd);
+            int dae_ret = start_daemon(gevent_fd);
             printf("Stopped daemon !\n");
 
             // Check daemon 
