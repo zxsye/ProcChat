@@ -229,7 +229,7 @@ int main(int argc, char** argv) {
                 continue;
             }
 
-            buf[nread] = '\0'; // @TODO: necessary ?
+            // buf[nread] = '\0'; // @TODO: necessary ?
             printf("Reading gevent\n");
             int dae_ret = global_et_client(buf);
 
