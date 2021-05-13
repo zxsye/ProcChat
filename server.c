@@ -189,7 +189,6 @@ int main(int argc, char** argv) {
     int gevent_fd = open(CHANNEL_NAME, O_RDONLY);
     
     fd_set allfds;
-    char buf[BUF_SIZE];
     int n_fds = gevent_fd + 1;
     
     struct timeval tv;
@@ -209,15 +208,20 @@ int main(int argc, char** argv) {
 
         } else if (FD_ISSET(gevent_fd, &allfds)) {
 
+            char buf[BUF_SIZE];
             ssize_t nread;
+
             nread = read(gevent_fd, buf, BUF_SIZE);
             if (nread == -1) {
                 perror("Failed to read");
                 continue;
             }
+
             buf[nread] = '\0'; // @TODO: necessary ?
             printf("Reading gevent\n");
+
             int dae_ret = global_et_client(buf);
+            
             if (dae_ret == -1) {
                 perror("Global: Could not initiate daemon.");
                 continue;
