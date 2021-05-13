@@ -92,8 +92,8 @@ pid_t global_et_client(char * msg) {
         printf("\nType is not connect");
         return -1;
     }
-    printf("building client....\n");
-    printf("msg length: %ld\n", strlen(msg + 2));
+    //DEBUG*/ printf("building client....\n");
+    //DEBUG*/ printf("msg length: %ld\n", strlen(msg + 2));
     // for (int i = 0; i < 2048; i++) {
     //     printf("%d ", msg[i]);
     // }
@@ -106,16 +106,16 @@ pid_t global_et_client(char * msg) {
     char domain_str[BUF_SIZE];
     strncpy(domain_str, get_domain(msg), DOMAIN_LEN);  // domain is maximum 255
 
-    printf("domain_str: %s\ndomain len: %ld\n", domain_str, strlen(domain_str));
+    //DEBUG*/ printf("domain_str: %s\ndomain len: %ld\n", domain_str, strlen(domain_str));
     if ( -1 == mkdir(domain_str, 0777) ) {
-        printf("Domain exists or Cannot be made\n"); // domain maps to something
+        //DEBUG*/ printf("Domain exists or Cannot be made\n"); // domain maps to something
         // return -1;
     }
 
     // File path to FIFO
     char to_client_fp[BUF_SIZE];
     strcpy(to_client_fp, "");
-    printf("Starting string: %s\n", to_client_fp);
+    //DEBUG*/ printf("Starting string: %s\n", to_client_fp);
     char to_daemon_fp[BUF_SIZE];
 
     strcat(to_client_fp, get_domain(msg));              // domain
@@ -123,8 +123,8 @@ pid_t global_et_client(char * msg) {
     strcat(to_client_fp, get_identifier(msg));          // domain/identifier
     strcat(to_daemon_fp, to_client_fp);                 // domain/identifier
 
-    //DEBUG printf("%s\n", to_client_fp);
-    //DEBUG printf("%s\n", to_daemon_fp);
+    //DEBUG*/ printf("%s\n", to_client_fp);
+    //DEBUG*/ printf("%s\n", to_daemon_fp);
 
     strcat(to_daemon_fp, "_WR");                        // domain/identifier_RD
     strcat(to_client_fp, "_RD");                        // domain/identifier_RD
@@ -136,15 +136,15 @@ pid_t global_et_client(char * msg) {
     /*DEBUG*/ printf("%s\n", to_client_fp);
     //DEBUG*/ printf("%s\n", to_daemon_fp);
     if ( mkfifo(to_client_fp, S_IRWXU | S_IRWXG) == -1 ) {
-        printf("Could not make pipe to client (RD)\n");
+        //DEBUG*/ printf("Could not make pipe to client (RD)\n");
         return -1;
     }
-    printf("made PIPE 1\n");
+    //DEBUG*/ printf("made PIPE 1\n");
     if ( mkfifo(to_daemon_fp, S_IRWXU | S_IRWXG) == -1 ) {
-        printf("Could not make pipe to daemon (WR)\n");
+        //DEBUG*/ printf("Could not make pipe to daemon (WR)\n");
         return -1;
     }
-    printf("made PIPE 2\n");
+    //DEBUG*/ printf("made PIPE 2\n");
 
     // Begin forking...
     // pid_t pid = fork();
@@ -209,7 +209,7 @@ int main(int argc, char** argv) {
     // struct timeval tv;
     int i = 0;
     while (1) {
-        printf("\n===== Cycle %d =====\n", i++);
+        //DEBUG*/ printf("\n===== Cycle %d =====\n", i++);
         // tv.tv_sec = 2;
         // tv.tv_usec = 0;
 
@@ -220,13 +220,13 @@ int main(int argc, char** argv) {
 
         // Event has occurred
         if (-1 == ret || 0 == ret) { //@todo, what is 0 ?
-            printf("\nselect() failed");
+            //DEBUG*/ printf("\nselect() failed");
 
         } else if ( FD_ISSET(gevent_fd, &allfds) ) {
 
-            printf("Reading gevent\n");
+            //DEBUG*/ printf("Reading gevent\n");
             char buf[BUF_SIZE];
-            
+
             // ssize_t nread;
             // nread = read(gevent_fd, buf, BUF_SIZE);
             // if (nread == -1) {
@@ -241,10 +241,10 @@ int main(int argc, char** argv) {
             int dae_ret = global_et_client(buf);
 
             if (dae_ret == -1) {
-                printf("Global: Could not initiate daemon.\n");
+                //DEBUG*/ printf("Global: Could not initiate daemon.\n");
 
             } else if (dae_ret == 0) {
-                /*DEBUG*/printf("Daemon terminated.\n");
+                //DEBUG*/ printf("Daemon terminated.\n");
                 break;
                 return 0;   
             } else if (1 == dae_ret) {
@@ -284,7 +284,8 @@ int main(int argc, char** argv) {
         // }
         
     }
-
+    
+    fclose(read_channel); 
     close(gevent_fd);
 
     return 0;
