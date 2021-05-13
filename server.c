@@ -275,78 +275,67 @@ int start_daemon(int gevent_fd) {
 
 }
 
-int main(int argc, char** argv) {
+int main() {
+	printf("welcome\n");
+	if ((mkfifo("gevent", 0777) < 0)) {
+		perror("Cannot make fifo");
+	}
+	printf("Made pipe !\n");
 
-    // Open "gevent" FIFO pipe
-    if((mkfifo(CHANNEL_NAME, 0777)) < 0) {
-        fprintf(stderr, "Unable to open pipe");
-    }
 
-    // ======== Read `gevent` ========
-    int gevent_fd = open(CHANNEL_NAME, O_RDONLY);
-    if (gevent_fd < 0) {
-        perror("Unable to open fd for gevent");
-        return 0;
-    }
-    
-    // FILE * read_channel = fdopen(gevent_fd, "r"); 
-    // struct timeval tv;
-    /*DEBUG*/ int i = 0;
-    while (1) {
-        /*DEBUG*/ printf("\n===== Cycle %d =====\n", i++);
-        // tv.tv_sec = 2;
-        // tv.tv_usec = 0;
-        fd_set allfds;
-        FD_ZERO(&allfds);
-        FD_SET(gevent_fd, &allfds);
-        // char buf[BUF_SIZE];
+	int gevent_fd;
+	// gevent_fd = 0;
+	gevent_fd = open("gevent", O_RDONLY);
+	
+	if (gevent_fd < 0) {
+		perror("Failed to open gevent FD");
+		return 1;
+	}
+	printf("Opened pipe FD !\n");
 
-        int n_fds = gevent_fd + 1;
-        int ret = select(n_fds, &allfds, NULL, NULL, NULL);
+	fd_set allfds;
+	int maxfd = gevent_fd + 1;
 
-        // Event has occurred
-        if (-1 == ret || 0 == ret) { //@todo, what is 0 ?
-            printf("select has failed\n");
-            return 1;
-        }
+	struct timeval timeout;
 
-        if ( FD_ISSET(gevent_fd, &allfds) ){
+	int i = 0;
+	printf("Starting while loop");
+	while (1)
+	{
+		printf("%d\n", i++);
+		timeout.tv_sec = 2;
+		timeout.tv_usec = 0;
+		
+		FD_ZERO(&allfds); //   000000
+		FD_SET(gevent_fd, &allfds); // 100000
+		int ret = select(maxfd, &allfds, NULL, NULL, &timeout);
 
-            // Pass to DAEMON
-            printf("Starting daemon...\n");
-            //////////////
-            ssize_t nread;
-            char buffer[BUF_SIZE];
+		if (-1 == ret) {
+			fprintf(stderr, "Error from select\n");	
 
-            nread = read(gevent_fd, buffer, sizeof(buffer));
-            if (nread == -1) {
-                printf("Failed to read\n");
-                return -1;
-            }
-            ////////////
-            int dae_ret = start_daemon(gevent_fd);
-            printf("Stopped daemon !\n");
+		} else if (0 == ret) {
+			printf("Nothing to report\n");
 
-            // Check daemon 
-            if (dae_ret == -1) {
-                //DEBUG*/ printf("Global: Could not initiate daemon.\n");
-            } else if (dae_ret == 0) {
-                //DEBUG*/ printf("Daemon terminated.\n");
-                break;
-                return 0;   
-            } else if (1 == dae_ret) {
-                continue;
-            }
-        }
-    }
-    
-    // fclose(read_channel); 
-    close(gevent_fd);
+		} else if (FD_ISSET(gevent_fd, &allfds)) {
 
-    return 0;
+			// Start reading
+			char buffer[BUF_SIZE];
+			int nread = read(gevent_fd, buffer, BUF_SIZE);
 
+			if (-1 == nread) {
+				perror("failed to read");
+			} else {
+				// buffer[nread] = '\0';
+				printf("received %s\n", buffer);
+				
+				// global_et_client(buffer);
+				
+			}
+		}
+	}
+
+	return 0;
 }
-
 
 
 
