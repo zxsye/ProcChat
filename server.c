@@ -220,7 +220,8 @@ int start_daemon(int gevent_fd) {
     char to_daemon_fp[BUF_SIZE];
     // strcpy(to_client_fp, "");
 
-    strcat(to_client_fp, get_domain(buffer));              // domain
+    strcpy(to_client_fp, get_domain(buffer));           // domain
+    
     strcat(to_client_fp, "/");                          // domain/
     strcat(to_client_fp, get_identifier(buffer));          // domain/identifier
     strcpy(to_daemon_fp, to_client_fp);                 // domain/identifier
