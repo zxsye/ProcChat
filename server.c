@@ -226,8 +226,8 @@ int main(int argc, char** argv) {
 
             printf("Reading gevent\n");
             char buf[BUF_SIZE];
-            ssize_t nread;
-
+            
+            // ssize_t nread;
             // nread = read(gevent_fd, buf, BUF_SIZE);
             // if (nread == -1) {
             //     printf("Failed to read\n");
@@ -237,7 +237,7 @@ int main(int argc, char** argv) {
             if (fgets(buf, BUF_SIZE, read_channel) == NULL) {
                 printf("Failed to read\n");
             }
-            
+
             int dae_ret = global_et_client(buf);
 
             if (dae_ret == -1) {
