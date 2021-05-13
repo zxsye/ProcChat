@@ -292,7 +292,7 @@ int start_daemon(int gevent_fd) {
     
     // close(fd_dae_WR);
     // close(fd_dae_RD);
-    return 0;
+    return 1;
 }
 
 int main() {
@@ -330,8 +330,13 @@ int main() {
 
 		} else if (FD_ISSET(gevent_fd, &allfds)) {
 			// Start reading
-            if (start_daemon(gevent_fd) == 0) // child successfully created
+            int dae = start_daemon(gevent_fd);
+            if (dae == 0) // child successfully created
                 continue;
+            else if (dae == 1) {
+                // child died
+                return 0;
+            }
 		}
 	}
 
