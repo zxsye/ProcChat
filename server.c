@@ -157,7 +157,7 @@ int handle_client_message(int fd_dae_RD, const char * domain,
     } else if ( get_type(buffer) == Saycount) {
 
     } else if ( get_type(buffer) == Receive) {
-        do_receive(buffer, domain, to_client_fp);
+        // do_receive(buffer, domain, to_client_fp);
     } 
 
 
