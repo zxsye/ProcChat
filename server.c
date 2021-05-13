@@ -302,7 +302,7 @@ int start_daemon(int gevent_fd) {
 }
 
 int main() {
-
+    printf("hello");
 	if ((mkfifo("gevent", 0777) < 0)) {
 		perror("Cannot make fifo");
 	}
