@@ -204,9 +204,8 @@ int main(int argc, char** argv) {
 
         if (-1 == ret || 0 == ret) { //@todo, what is 0 ?
             perror("select() failed");
-        }
-
-        if (FD_ISSET(gevent_fd, &allfds)) {
+            
+        } else if (FD_ISSET(gevent_fd, &allfds)) {
             ssize_t nread;
             nread = read(gevent_fd, buf, BUF_SIZE);
             buf[nread] = '\0'; // @TODO: necessary ?
