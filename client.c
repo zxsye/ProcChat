@@ -58,6 +58,15 @@ int main() {
 
     write(gevent_fd, msg, 2048);
 
+    // Connect june
+    sleep(1);
+    msg[0] = 0;
+    msg[1] = 0;
+    strcpy(msg + 2, "sunday");
+    strcpy(msg + 2 + 256, "april");
+
+    write(gevent_fd, msg, 2048);
+
     // SAY
     sleep(2);
     int wr = open("april/friday_WR", O_WRONLY);
