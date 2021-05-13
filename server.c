@@ -223,7 +223,7 @@ int start_daemon(int gevent_fd) {
     strcat(to_client_fp, get_domain(buffer));              // domain
     strcat(to_client_fp, "/");                          // domain/
     strcat(to_client_fp, get_identifier(buffer));          // domain/identifier
-    strcat(to_daemon_fp, to_client_fp);                 // domain/identifier
+    strcpy(to_daemon_fp, to_client_fp);                 // domain/identifier
 
     strcat(to_daemon_fp, "_WR");                        // domain/identifier_RD
     strcat(to_client_fp, "_RD");                        // domain/identifier_RD
