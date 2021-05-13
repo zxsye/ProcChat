@@ -203,9 +203,9 @@ int main(int argc, char** argv) {
     int n_fds = gevent_fd + 1;
     
     // struct timeval tv;
-
+    int i = 0;
     while (1) {
-    
+        printf("\n===== Cycle %d =====\n", i);
         // tv.tv_sec = 2;
         // tv.tv_usec = 0;
 
