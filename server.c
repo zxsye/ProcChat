@@ -8,8 +8,10 @@
 
 #include <sys/types.h> 
 #include <sys/stat.h>
+#include <sys/time.h>
+// #include <sys/select.h>
 
-#include <sys/stat.h>
+#include <errno.h>
 #include <fcntl.h>
 
 #include <unistd.h>
@@ -79,6 +81,8 @@ int daemon(int fd_dae_WR, int fd_dae_RD) {
  *      - Creates domain (if non-existant)
  *      - Creates two FIFOs (read and write), connecting DAEMON <-> client
  *      - Starts DAEMON function: monitors read pipe
+ *
+ *  Return: 0 = child terminated
  */
 pid_t global_et_client(char * msg) {
     // Try connecting
@@ -159,6 +163,7 @@ pid_t global_et_client(char * msg) {
         
         close(fd_dae_WR);
         close(fd_dae_RD);
+        return 0;
 
     } else {
     // Global processes: mother
@@ -173,37 +178,82 @@ pid_t global_et_client(char * msg) {
 int main(int argc, char** argv) {
 
     // Open "gevent" FIFO pipe
-    if((mkfifo(CHANNEL_NAME, S_IRWXU | S_IRWXG)) >= 0) { 
-
-        // Read `gevent`
-        int fd = open(CHANNEL_NAME, O_RDONLY);
-        
-        if(fd > 0) {
-            FILE * read_channel = fdopen(fd, "r"); 
-            char buf[BUF_SIZE]; 
-
-            // generate daemon
-            int i = 0;
-            while (fgets(buf, BUF_SIZE, read_channel) != NULL) {
-                //DEBUG*/printf("gevent...\n");
-                //@TODO: change to select() ... see notion...
-                printf("%d\n", i++);
-                global_et_client(buf);
-            }
-
-            // split string
-            // find command id
-            // execute command 
-            // make new process???
-            // set up pipes...
-
-            //DEBUG printf("closing pipe...\n");
-            fclose(read_channel); 
-        }
-        close(fd);
-    } else { 
+    if((mkfifo(CHANNEL_NAME, S_IRWXU | S_IRWXG)) < 0) {
         fprintf(stderr, "Unable to open pipe");
     }
+
+    // ======== Read `gevent` ========
+    int gevent_fd = open(CHANNEL_NAME, O_RDONLY);
+    
+    fd_set allfds;
+    char buf[BUF_SIZE];
+    int n_fds = gevent_fd + 1;
+    
+    struct timeval tv;
+
+    while (1) {
+        
+        FD_ZERO(&allfds);
+        FD_SET(gevent_fd, &allfds);
+
+        tv.tv_sec = 1;
+        tv.tv_usec = 0;
+
+        int ret = select(n_fds, &allfds, NULL, NULL, &tv);
+
+        if (-1 == ret || 0 == ret) { //@todo, what is 0 ?
+            perror("select() failed");
+        }
+
+        if (FD_ISSET(gevent_fd, &allfds)) {
+            ssize_t nread;
+            nread = read(gevent_fd, buf, BUF_SIZE);
+            buf[nread] = '\0'; // @TODO: necessary ?
+
+            int dae_ret = global_et_client(buf);
+
+            if (dae_ret == -1) {
+                perror("Global: Could not initiate daemon.");
+                continue;
+            } else if (dae_ret == 0) {
+                /*DEBUG*/printf("Daemon terminated.\n");
+                return 0;   
+            }
+           
+        }
+        // if(gevent_fd > 0) {
+        //     FILE * read_channel = fdopen(gevent_fd, "r"); 
+        //     char buf[BUF_SIZE]; 
+
+        //     // generate daemon
+        //     int i = 0;
+        //     while (fgets(buf, BUF_SIZE, read_channel) != NULL) {
+        //         //DEBUG*/printf("gevent...\n");
+        //         //@TODO: change to select() ... see notion...
+        //         printf("%d\n", i++);
+        //         int dae_ret = global_et_client(buf);
+
+        //         if (dae_ret == -1) {
+        //             perror("Global: Could not initiate daemon.");
+        //             continue;
+        //         } else if (dae_ret == 0) {
+        //             /*DEBUG*/printf("Daemon terminated.\n");
+        //             return 0;   
+        //         }
+        //     }
+
+        //     // split string
+        //     // find command id
+        //     // execute command 
+        //     // make new process???
+        //     // set up pipes...
+
+        //     //DEBUG printf("closing pipe...\n");
+        //     fclose(read_channel); 
+        // }
+        
+    }
+    close(gevent_fd);
 
     return 0;
 
