@@ -305,7 +305,6 @@ int start_daemon(int gevent_fd) {
     char to_client_fp[BUF_SIZE];
     char to_daemon_fp[BUF_SIZE];
     strcat(to_client_fp, "/");                          // domain/
-    // strcpy(to_client_fp, "");
 
     strncpy(to_client_fp, get_domain(buffer), 256);           // domain
 
@@ -316,6 +315,8 @@ int start_daemon(int gevent_fd) {
     strcat(to_client_fp, "_RD");                        // domain/identifier_RD
     
     // Starting FIFO
+    printf("%s\n", to_client_fp);
+    printf("%s\n", to_daemon_fp);
     // @TODO: overwrite existing pipe if needed
     if ( mkfifo(to_client_fp, 0777) == -1 ) {
         return -1;
@@ -324,7 +325,8 @@ int start_daemon(int gevent_fd) {
         return -1;
     }
 
-    return 0;
+
+
     // ========== FORKING ========== //
     pid_t pid = fork();
     if (pid < 0) {
