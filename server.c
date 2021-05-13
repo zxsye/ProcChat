@@ -104,7 +104,7 @@ pid_t global_et_client(char * msg) {
     strncpy(domain_str, get_domain(msg), DOMAIN_LEN);  // domain is maximum 255
 
     if ( -1 == mkdir(domain_str, 0777) ) {
-        printf("domain_str: %s\n", domain_str);
+        printf("domain_str: %s\ndomain len: %ld", domain_str, strlen(domain_str));
         perror("I cannot make directory"); // domain maps to something
         return -1;
     }
