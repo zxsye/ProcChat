@@ -137,10 +137,12 @@ pid_t global_et_client(char * msg) {
         printf("Could not make pipe to client (RD)\n");
         return -1;
     }
+    printf("made PIPE 1\n");
     if ( mkfifo(to_daemon_fp, S_IRWXU | S_IRWXG) == -1 ) {
         printf("Could not make pipe to daemon (WR)\n");
         return -1;
     }
+    printf("made PIPE 2\n");
 
     // Begin forking...
     // pid_t pid = fork();
