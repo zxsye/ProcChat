@@ -226,7 +226,7 @@ int main(int argc, char** argv) {
 
             buf[nread] = '\0'; // @TODO: necessary ?
             printf("Reading gevent\n");
-
+            printf("Read: %s\n", buf);
             int dae_ret = global_et_client(buf);
 
             if (dae_ret == -1) {
