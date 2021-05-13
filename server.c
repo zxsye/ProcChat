@@ -202,9 +202,9 @@ int main(int argc, char** argv) {
     
     // FILE * read_channel = fdopen(gevent_fd, "r"); 
     // struct timeval tv;
-    //DEBUG*/ int i = 0;
+    /*DEBUG*/ int i = 0;
     while (1) {
-        //DEBUG*/ printf("\n===== Cycle %d =====\n", i++);
+        /*DEBUG*/ printf("\n===== Cycle %d =====\n", i++);
         // tv.tv_sec = 2;
         // tv.tv_usec = 0;
         fd_set allfds;
@@ -217,23 +217,25 @@ int main(int argc, char** argv) {
 
         // Event has occurred
         if (-1 == ret || 0 == ret) { //@todo, what is 0 ?
-            //DEBUG*/ printf("\nselect() failed");
             printf("select has failed\n");
-        } else if ( FD_ISSET(gevent_fd, &allfds) ){
+            continue;
+        }
 
-            //DEBUG*/ printf("Reading gevent\n");
+        if ( FD_ISSET(gevent_fd, &allfds) ){
 
             ssize_t nread;
-            nread = read(gevent_fd, buf, BUF_SIZE);
+            nread = read(gevent_fd, buf, sizeof(buf));
             if (nread == -1) {
                 printf("Failed to read\n");
                 continue;
             }
             
+            printf("%s\n", buf);
             // if (fgets(buf, BUF_SIZE, read_channel) == NULL) {
             //     printf("Failed to read\n");
             // }
 
+            // Pass to DAEMON
             int dae_ret = global_et_client(buf);
 
             if (dae_ret == -1) {
