@@ -240,11 +240,11 @@ int start_daemon(int gevent_fd) {
     return 0;
 
     // Begin forking...
-    pid_t pid = fork();
-    if (pid < 0) {
-        printf("\nCould not fork.");
-        return -1;
-    }
+    // pid_t pid = fork();
+    // if (pid < 0) {
+    //     printf("\nCould not fork.");
+    //     return -1;
+    // }
 
     // Child process: daemon
     // if (pid == 0) {
