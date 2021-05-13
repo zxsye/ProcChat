@@ -106,7 +106,10 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp) {
     while ((de = readdir(dr)) != NULL) {
         printf("%s\n", de->d_name);
         char * filename = de->d_name;
-        long pp_len = strlen(filename);
+        long filenm_len = strlen(filename);
+        if (filenm_len <= 2) {
+            return -1;
+        }
         
         // Skip write pipes to own client
         if (strcmp(filename, to_daemon_fp)) {  
@@ -114,7 +117,7 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp) {
         }
 
         // Only write to WR pipes: we need to WRITE to other daemons
-        if (filename[pp_len - 2] == 'W' && filename[pp_len - 1] == 'R') {
+        if (filename[filenm_len - 2] == 'W' && filename[filenm_len - 1] == 'R') {
             char pipepath[BUF_SIZE];
             strcpy(pipepath, domain);
             strcat(pipepath, "/");
@@ -185,6 +188,7 @@ Takes in fd for gevent, reads latest message from pipe to construct new pipes fo
 
 */
 int start_daemon(int gevent_fd) {
+    perror("=====");
     char buffer[BUF_SIZE];
 
     ssize_t nread = read(gevent_fd, buffer, sizeof(buffer));
@@ -251,12 +255,14 @@ int start_daemon(int gevent_fd) {
         return 0;
     }
     printf("Child process started...\n");
+    perror("");
     // Child process: daemon
     close(gevent_fd);
 
     // Open pipe as FD
-    int fd_dae_WR = open(to_client_fp, O_WRONLY);
-    int fd_dae_RD = open(to_daemon_fp, O_RDONLY);
+    printf("Opening listen channel (daemon): %s\n", to_daemon_fp);
+    int fd_dae_WR = open(to_client_fp, O_NONBLOCK, O_WRONLY);
+    int fd_dae_RD = open(to_daemon_fp, O_NONBLOCK, O_RDONLY);
     if (fd_dae_RD < 0 || fd_dae_WR < 0) {
 		perror("Failed to open gevent FD");
 		return 1;
@@ -283,7 +289,7 @@ int start_daemon(int gevent_fd) {
 			fprintf(stderr, "Error from select");	
             //@todo: return here
 		} else if (0 == ret) {
-			perror("Nothing to report");
+			perror("Client said nothing...");
 
 		} else if (FD_ISSET(fd_dae_RD, &allfds)) {
 			// Start reading from clients
@@ -334,7 +340,7 @@ int main() {
 		if (-1 == ret) {
 			fprintf(stderr, "Error from select\n");	
 		} else if (0 == ret) {
-			printf("Nothing to report\n");
+			perror("Nothing to report");
 
 		} else if (FD_ISSET(gevent_fd, &allfds)) {
 			// Start reading

@@ -15,3 +15,19 @@ test:
 clean:
 	rm -f procchat
 
+# My testing
+sani:
+	rm -r april
+	rm gevent
+	rm server
+	rm client
+
+server:
+	gcc -o server server.c
+
+client: 
+	gcc -o client client.c
+
+all:
+	make server
+	make client
