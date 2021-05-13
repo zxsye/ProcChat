@@ -183,9 +183,12 @@ int main(int argc, char** argv) {
             char buf[BUF_SIZE]; 
 
             // generate daemon
+            int i = 0;
             while (fgets(buf, BUF_SIZE, read_channel) != NULL) {
                 //DEBUG*/printf("gevent...\n");
-                global_et_client(buf); 
+                //@TODO: change to select() ... see notion...
+                printf("%d\n", i++);
+                global_et_client(buf);
             }
 
             // split string
