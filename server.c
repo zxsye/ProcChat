@@ -105,7 +105,7 @@ pid_t global_et_client(char * msg) {
 
     if ( -1 == mkdir(domain_str, 0777) ) {
         printf("domain_str: %s\ndomain len: %ld", domain_str, strlen(domain_str));
-        perror("I cannot make directory"); // domain maps to something
+        printf("I cannot make directory"); // domain maps to something
         return -1;
     }
 
@@ -221,7 +221,7 @@ int main(int argc, char** argv) {
             printf("Reading gevent\n");
 
             int dae_ret = global_et_client(buf);
-            
+
             if (dae_ret == -1) {
                 perror("Global: Could not initiate daemon.");
                 continue;
