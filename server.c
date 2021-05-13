@@ -298,7 +298,7 @@ int main() {
 	fd_set allfds;
 	struct timeval timeout;
 
-	int i = 0;
+	// int i = 0;
 	// printf("Starting while loop");
 
 	while (1)
