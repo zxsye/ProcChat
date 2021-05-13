@@ -221,7 +221,7 @@ int main(int argc, char** argv) {
 
             nread = read(gevent_fd, buf, BUF_SIZE);
             if (nread == -1) {
-                printf("\nFailed to read");
+                printf("Failed to read\n");
                 continue;
             }
 
@@ -231,7 +231,7 @@ int main(int argc, char** argv) {
             int dae_ret = global_et_client(buf);
 
             if (dae_ret == -1) {
-                printf("\nGlobal: Could not initiate daemon.");
+                printf("Global: Could not initiate daemon.\n");
 
             } else if (dae_ret == 0) {
                 /*DEBUG*/printf("Daemon terminated.\n");
