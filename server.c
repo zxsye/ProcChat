@@ -216,8 +216,16 @@ int handle_daemon_update(int fd_dae_RD, int fd_dae_WR,
         }
 
     } else if ( get_type(buffer) == Saycount) {
+        int st = do_say(buffer, domain, to_daemon_fp, to_client_fp); // write to other daemons
+
+        if (st == -1) {
+            perror("Failed do_say");
+            return -1;
+        }
     } else if ( get_type(buffer) == Receive) {
         // DEBUG */ printf("\n===== doing receive ====\n");
+        do_receive(buffer, to_client_fp);
+    } else if ( get_type(buffer) == Recvcont) {
         do_receive(buffer, to_client_fp);
     }
     return 0;
@@ -348,9 +356,11 @@ int start_daemon(int gevent_fd) {
 		} else if (FD_ISSET(fd_dae_RD, &allfds)) {
 			// Start reading from clients
             //DEBUG*/printf("Handling message...\n");
+
             int succ = handle_daemon_update(fd_dae_RD, fd_dae_WR,
                                             to_client_fp, to_daemon_fp,
                                             domain_str);
+
             if (succ == -1) {
                 return -1; //@TODO: change to something else
             }
@@ -370,20 +380,19 @@ int main() {
 		perror("Cannot make fifo");
 	}
 
-	int gevent_fd = open("gevent", O_RDWR);
-	if (gevent_fd < 0) {
-		perror("Failed to open gevent FD");
-		return 1;
-	}
-
-	int maxfd = gevent_fd + 1;
-
-	fd_set allfds;
-	struct timeval timeout;
-
-
 	while (1)
 	{
+        int gevent_fd = open("gevent", O_RDWR);
+        if (gevent_fd < 0) {
+            perror("Failed to open gevent FD");
+            return 1;
+        }
+
+        int maxfd = gevent_fd + 1;
+
+        fd_set allfds;
+        struct timeval timeout;
+
 		FD_ZERO(&allfds); //   000000
 		FD_SET(gevent_fd, &allfds); // 100000
         
@@ -404,13 +413,15 @@ int main() {
             if (dae == 0) // child successfully created
                 continue;
             else if (dae == 1) {
-                // child died
+                // gevent already closed
                 return 0;
             }
 		}
+
+        close(gevent_fd);
 	}
 
-    
+
     // run_daemon(int fd_RD, int fd_WR);
 	return 0;
 }
