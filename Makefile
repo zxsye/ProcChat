@@ -31,3 +31,7 @@ client:
 all:
 	make server
 	make client
+
+me:
+	make sani
+	make all

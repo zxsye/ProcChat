@@ -34,6 +34,7 @@
 #define RECEIVE_ID_INDEX(draft) (draft + 2)
 #define SAY_MSG_INDEX(draft) (draft + 2)
 #define SET_RECEIVE(draft) ( *(short*)draft = Receive)
+#define FILEPATH_TO_IDEN(filepath, domain) (filepath + strlen(domain) + 1)
 
 enum type {
     Connect = 0,
@@ -94,6 +95,7 @@ int daemon(int fd_dae_WR, int fd_dae_RD) {
 Takes in buffer for maximum 2048 characters.
 */
 int do_say(char * buffer, const char * domain, const char * to_daemon_fp) {
+    printf("\n=== do_say ===\n");
     // Find all other client handlers in current domain
     struct dirent *de;              // Pointer for directory entry
     DIR *dr = opendir(domain);      // opendir() returns a pointer of DIR type. 
@@ -104,7 +106,7 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp) {
     }
   
     while ((de = readdir(dr)) != NULL) {
-        printf("%s\n", de->d_name);
+        printf("\n= Directory: %s =\n", de->d_name);
         char * filename = de->d_name;
         long filenm_len = strlen(filename);
         if (filenm_len <= 2) {
@@ -112,21 +114,24 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp) {
             continue;
         }
         
+        char pipepath[BUF_SIZE];
+        strcpy(pipepath, domain);
+        strcat(pipepath, "/");
+        strcat(pipepath, filename);
+
         // Skip write pipes to own client
-        printf("Checking own pipe...\n");
-        if (strcmp(filename, to_daemon_fp) == 0) {  
-            printf("self = %s\n", to_daemon_fp);
-            printf("Cannot write to self\n");
+        printf("...Checking own pipe...\n");
+        printf("%s :: %s\n", pipepath, to_daemon_fp);
+        
+        if (strcmp(pipepath, to_daemon_fp) == 0) {  
+            printf("# Cannot write to self\n");
             continue;
         }
 
-        printf("Writing to pipe");
+        printf("\nWriting to pipe\n");
         // Only write to WR pipes: we need to WRITE to other daemons
         if (filename[filenm_len - 2] == 'W' && filename[filenm_len - 1] == 'R') {
-            char pipepath[BUF_SIZE];
-            strcpy(pipepath, domain);
-            strcat(pipepath, "/");
-            strcat(pipepath, filename);
+            
             
             int fd = open(pipepath, O_WRONLY);
             if (fd < 0) {
@@ -134,15 +139,14 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp) {
                 return -1;
             }
             // Write to other pipes: RECEIVE <identifier> <message>
-            printf("here");
             char draft[BUF_SIZE];
             SET_RECEIVE(draft);
-            strcat(draft, get_identifier(buffer));
+            strcat(draft, FILEPATH_TO_IDEN(to_daemon_fp, domain));
             strcat(draft, SAY_MSG_INDEX(buffer));
 
             write(fd, draft, strlen( draft ) + 1);
-            printf("iden: %s\n", get_identifier(buffer));
-            printf("msg: %s\n", SAY_MSG_INDEX(buffer));
+            printf("iden: %s\n", FILEPATH_TO_IDEN(to_daemon_fp, domain));
+            printf("msg: %s\n\n", SAY_MSG_INDEX(buffer));
             
             close(fd);
         }
@@ -160,6 +164,7 @@ int handle_client_message(int fd_dae_RD, const char * domain,
                           const char * to_client_fp, 
                           const char * to_daemon_fp)
 {
+    printf("@@@@@@@@@ %d @@@@@@@@@\n", getpid());
     char buffer[BUF_SIZE];
     int nread = read(fd_dae_RD, buffer, BUF_SIZE);
     if (nread == -1) {
@@ -173,11 +178,11 @@ int handle_client_message(int fd_dae_RD, const char * domain,
         int st = do_say(buffer, domain, to_daemon_fp); // write to other daemons
         if (st == -1) {
             perror("Failed do_say");
+            return -1;
         }
-
     } else if ( get_type(buffer) == Saycount) {
-
     } else if ( get_type(buffer) == Receive) {
+        printf("Received!\n");
         // do_receive(buffer, domain, to_client_fp);
     }
     return 0;
@@ -255,6 +260,7 @@ int start_daemon(int gevent_fd) {
     // ========== FORKING ========== //
     pid_t pid = fork();
     if (pid < 0) {
+        printf("@@@@@@@@@ PARENT: %d @@@@@@@@@\n", getpid());
         printf("Could not fork\n");
         return -1;
     }
@@ -267,10 +273,10 @@ int start_daemon(int gevent_fd) {
     //DEBUG*/printf("Child process started...\n");
 
     // Child process: daemon
+    printf("@@@@@@@@@ CHILD: %d @@@@@@@@@\n", getpid());
     close(gevent_fd);
 
     // Open pipe as FD
-    //DEBUG*/printf("Opening listen channel (daemon): %s\n", to_daemon_fp);
     int fd_dae_WR = open(to_client_fp, O_NONBLOCK, O_WRONLY);
     int fd_dae_RD = open(to_daemon_fp, O_NONBLOCK, O_RDONLY);
     if (fd_dae_RD < 0 || fd_dae_WR < 0) {
