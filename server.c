@@ -359,14 +359,8 @@ Takes in fd for gevent, reads latest message from pipe to construct new pipes fo
 - Return 2: 
 
 */
-int start_daemon(int gevent_fd) {
-    char buffer[BUF_SIZE];
-
-    ssize_t nread = read(gevent_fd, buffer, sizeof(buffer));
-    if (nread == -1) {
-        printf("Failed to read\n");
-        return -1;
-    }
+int start_daemon(char * buffer) {
+    
 
     // printf("%s\n", buffer);
     // return 1;
@@ -437,7 +431,6 @@ int start_daemon(int gevent_fd) {
 
     // Child process: daemon
     // printf("@@@@@@@@@ CHILD: %d @@@@@@@@@\n", getpid());
-    close(gevent_fd);
 
     // Open pipe as FD
     int fd_dae_WR = open(to_client_fp, O_RDWR);
@@ -501,19 +494,19 @@ int main() {
 		perror("Cannot make fifo");
 	}
 
-    int gevent_fd = open("gevent", O_RDWR);
-    if (gevent_fd < 0) {
-        perror("Failed to open gevent FD");
-        return 1;
-    }
-
-    int maxfd = gevent_fd + 1;
-
-    fd_set allfds;
-    struct timeval timeout;
-
 	while (1)
 	{
+        int gevent_fd = open("gevent", O_RDWR);
+        if (gevent_fd < 0) {
+            perror("Failed to open gevent FD");
+            return 1;
+        }
+
+        int maxfd = gevent_fd + 1;
+
+        fd_set allfds;
+        struct timeval timeout;
+
 		FD_ZERO(&allfds); //   000000
 		FD_SET(gevent_fd, &allfds); // 100000
         
@@ -530,7 +523,14 @@ int main() {
 
 		} else if (FD_ISSET(gevent_fd, &allfds)) {
 			// Start reading
-            int dae = start_daemon(gevent_fd);
+            char buffer[BUF_SIZE];
+            ssize_t nread = read(gevent_fd, buffer, sizeof(buffer));
+            if (nread == -1) {
+                printf("Failed to read\n");
+                return -1;
+            }
+
+            int dae = start_daemon(buffer);
             if (dae == 0) // child successfully created
                 continue;
             else if (dae == 1) {
@@ -539,9 +539,9 @@ int main() {
             }
 		}
 
+        close(gevent_fd);
 	}
 
-    close(gevent_fd);
 
     // run_daemon(int fd_RD, int fd_WR);
 	return 0;
