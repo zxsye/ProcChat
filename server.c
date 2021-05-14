@@ -466,7 +466,7 @@ int start_daemon(int gevent_fd) {
         timeout = timeout;
 		
 		int ret = select(maxfd, &allfds, NULL, NULL, NULL);
-
+        continue;
         // DEBUG*/printf("\n !!!!!!!! UPDATE !!!!!!!! \n");
 		if (-1 == ret) {
 			fprintf(stderr, "Error from select");	
