@@ -292,7 +292,7 @@ int start_daemon(int gevent_fd) {
         return -1;
     }
 
-    fprintf(stderr, "Created pipe: %s\n", to_client_fp);
+    //DEBUG*/fprintf(stderr, "Created pipe: %s\n", to_client_fp);
     // ========== FORKING ========== //
     pid_t pid = fork();
     if (pid < 0) {
