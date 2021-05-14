@@ -267,7 +267,7 @@ int do_saycount(char * msg, const char * domain, const char * to_daemon_fp, cons
 
             //DEBUG*/printf("Writing from: %s :: %s\n", to_daemon_fp, pipepath);
             // Writing now
-            int fd = open(pipepath, O_NONBLOCK | O_WRONLY);
+            int fd = open(pipepath, O_WRONLY);
             if (fd < 0) {
                 perror("do_say: Error in piping message to other clients");
                 return -1;
@@ -493,6 +493,8 @@ int start_daemon(int gevent_fd) {
     return 1;
 }
 
+/* Gevent monitor
+*/
 int main() {
     // printf("hello");
 	if ((mkfifo("gevent", 0777) < 0)) {
