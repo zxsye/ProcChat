@@ -285,6 +285,11 @@ int do_saycount(char * buffer, const char * domain, const char * to_daemon_fp, c
             if (write(fd, draft, 2048) < -1) {
                 perror("Failed writing");
             }
+
+            fprintf(stderr, "Target: %s\n", to_client_fp);
+            fprintf(stderr, "Identifer: %s\n", draft + 2);
+            fprintf(stderr, "Msg: %s\n", draft + 2 + 256);
+            fprintf(stderr, "Terminate: %d\n\n", buffer[2048 - 1]);
             
             close(fd);
         }
