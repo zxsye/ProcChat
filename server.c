@@ -309,17 +309,12 @@ int do_saycount(char * buffer, const char * domain, const char * to_daemon_fp, c
 
 
 */
-int handle_daemon_update(int fd_dae_RD, int fd_dae_WR, 
+int handle_daemon_update(char * buffer,
                           const char * to_client_fp, const char * to_daemon_fp,
                           const char * domain)
 {
     // printf("@@@@@@@@@ %d @@@@@@@@@\n", getpid());
-    char buffer[BUF_SIZE];
-    int nread = read(fd_dae_RD, buffer, BUF_SIZE);
-    if (nread == -1) {
-        printf("Failed to read\n");
-        return -1;
-    }
+    
     
     // Check message type
     if ( get_type(buffer) == Say) {
@@ -438,23 +433,24 @@ int start_daemon(int gevent_fd) {
     // printf("@@@@@@@@@ CHILD: %d @@@@@@@@@\n", getpid());
     close(gevent_fd);
 
-    // Open pipe as FD
-    int fd_dae_WR = open(to_client_fp, O_RDWR);
-    int fd_dae_RD = open(to_daemon_fp, O_RDWR);
-    if (fd_dae_RD < 0 || fd_dae_WR < 0) {
-		perror("Failed to open gevent FD");
-		return 1;
-	}
-    
-    // Reading from client
-	fd_set allfds;
-	int maxfd = fd_dae_RD + 1;
-	struct timeval timeout;
 
     // ========= Monitoring client =========
     //DEBUG*/printf("Begin monitoring client...\n");
 	while (1)
 	{
+        // Open pipe as FD
+        // int fd_dae_WR = open(to_client_fp, O_RDWR);
+        int fd_dae_RD = open(to_daemon_fp, O_RDWR);
+        if (fd_dae_RD < 0) {
+            perror("Failed to open gevent FD");
+            return 1;
+        }
+        
+        // Reading from client
+        fd_set allfds;
+        int maxfd = fd_dae_RD + 1;
+        struct timeval timeout;
+        
 		FD_ZERO(&allfds); //   000000
 		FD_SET(fd_dae_RD, &allfds); // 100000
         
@@ -463,6 +459,8 @@ int start_daemon(int gevent_fd) {
         timeout = timeout;
 		
 		int ret = select(maxfd, &allfds, NULL, NULL, NULL);
+
+
 
         // DEBUG*/printf("\n !!!!!!!! UPDATE !!!!!!!! \n");
 		if (-1 == ret) {
@@ -473,9 +471,16 @@ int start_daemon(int gevent_fd) {
 
 		} else if (FD_ISSET(fd_dae_RD, &allfds)) {
 			// Start reading from clients
+            char buffer[BUF_SIZE];
+            int nread = read(fd_dae_RD, buffer, BUF_SIZE);
+            if (nread == -1) {
+                printf("Failed to read\n");
+                return -1;
+            }
+            close(fd_dae_RD);
             //DEBUG*/printf("Handling message...\n");
 
-            int succ = handle_daemon_update(fd_dae_RD, fd_dae_WR,
+            int succ = handle_daemon_update(buffer,
                                             to_client_fp, to_daemon_fp,
                                             domain_str);
 
@@ -486,8 +491,7 @@ int start_daemon(int gevent_fd) {
 		}
 	}
     
-    close(fd_dae_WR);
-    close(fd_dae_RD);
+    
 
     return 1;
 }
