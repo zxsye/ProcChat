@@ -82,8 +82,8 @@ char * get_domain(char * string) {
 
 /*  Relays <RECEIVE IDENTIFIER MSG> to client */
 int do_receive(char * buffer, const char * to_client_fp) {
-    perror("Doing receive");
-    errno = 0;
+    //DEBUG*/perror("Doing receive");
+    //DEBUG*/errno = 0;
 
     if (get_type(buffer) != Receive) {
         return -1;
@@ -123,7 +123,7 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp, const 
   
     while ((de = readdir(dr)) != NULL) {
         //DEBUG*/printf("\n**** Directory: %s ****\n", de->d_name);
-        fprintf(stderr, "\n**** Directory: %s ****\n", de->d_name);
+        //DEBUG*/fprintf(stderr, "\n**** Directory: %s ****\n", de->d_name);
         
         char * filename = de->d_name;
         long filenm_len = strlen(filename);
