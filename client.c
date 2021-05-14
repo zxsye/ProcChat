@@ -51,8 +51,8 @@ int main() {
     }
 
     char msg[BUF_SIZE];
-    msg[0] = 0;
     msg[1] = 0;
+    msg[0] = 0;
     strcpy(msg + 2, "friday");
     strcpy(msg + 2 + 256, "april");
 
@@ -60,8 +60,8 @@ int main() {
 
     // Connect june
     sleep(1);
-    msg[0] = 0;
     msg[1] = 0;
+    msg[0] = 0;
     strcpy(msg + 2, "sunday");
     strcpy(msg + 2 + 256, "april");
 
@@ -70,8 +70,8 @@ int main() {
     // SAY
     sleep(1);
     int wr = open("april/friday_WR", O_WRONLY);
-    msg[0] = 0;
-    msg[1] = Say;
+    msg[1] = 0;
+    msg[0] = Say;
     strcpy(msg + 2, "what's up doc?");
 
     write(wr, msg, 2048);
