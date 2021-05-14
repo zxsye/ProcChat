@@ -280,7 +280,8 @@ int do_saycount(char * msg, const char * domain, const char * to_daemon_fp, cons
             const char * identity = FILEPATH_TO_IDEN(to_client_fp, domain);
             strncpy(draft + 2, identity, strlen(identity) - 3); // To remove _RD
             draft[2 + strlen(identity) - 3] = '\0';
-            strcpy(draft + 2 + 256, SAY_MSG_INDEX(msg));
+            // strcpy(draft + 2 + 256, SAY_MSG_INDEX(msg));
+            strcpy(draft + 2 + 256, "poop");
 
             draft[BUF_SIZE - 1] = msg[BUF_SIZE - 1];
             // Write to other clients
@@ -398,8 +399,8 @@ int start_daemon(int gevent_fd) {
     strcat(to_client_fp, "_RD");                        // domain/identifier_RD
     
     // Starting FIFO
-    /* DEBUG */fprintf(stderr, "%s\n", to_client_fp);
-    /* DEBUG */fprintf(stderr, "%s\n\n", to_daemon_fp);
+    // DEBUG */fprintf(stderr, "%s\n", to_client_fp);
+    // DEBUG */fprintf(stderr, "%s\n\n", to_daemon_fp);
     // @TODO: overwrite existing pipe if needed
     if ( mkfifo(to_client_fp, 0777) == -1 ) {
         // perror("Cannot make pipe to client");
