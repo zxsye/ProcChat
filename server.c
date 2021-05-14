@@ -110,21 +110,23 @@ int do_receive(char * buffer, const char * to_client_fp) {
 
 /*  Relays <RECEIVE IDENTIFIER MSG> to client */
 int do_recvcont(char * buffer, const char * to_client_fp) {
-    /*DEBUG*/perror("Doing recvcont");
+    /*DEBUG*/perror("\nDoing recvcont");
     //DEBUG*/errno = 0;
 
     if (get_type(buffer) != Recvcont) { 
         return -1;
     }
 
-    int fd = open(to_client_fp, O_WRONLY);
+    int fd = open(to_client_fp, O_RDWR);
     if (fd < 0) {
         fprintf(stderr, "do_receive: cannot open %s\n", to_client_fp);
         return -1;
     }
     if (write(fd, buffer, 2048) < 0) {
+        close(fd);
         fprintf(stderr, "do_receive: cannot write()\n");
     } else {
+        close(fd);
         /* DEBUG */ printf("wrote to client\n");
         fprintf(stderr, "Target: %s\n", to_client_fp);
         fprintf(stderr, "Identifer: %s\n", buffer + 2);
@@ -132,7 +134,7 @@ int do_recvcont(char * buffer, const char * to_client_fp) {
         fprintf(stderr, "Terminate: %d\n\n", buffer[2048 - 1]);
         /* DEBUG */ printf("From: %s\nMsg: %s\n", buffer + 2, buffer + 2 + 256);
     }
-    close(fd);
+    
     return 1;
 }
 
