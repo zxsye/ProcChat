@@ -89,8 +89,8 @@ int do_receive(char * buffer, const char * to_client_fp) {
 
     int fd = open(to_client_fp, O_NONBLOCK, O_WRONLY);
     if (write(fd, buffer, 2048) < 0) {
-        fprintf(stderr, " %s \n", to_client_fp);
-        fprintf(stderr, "Identifer\n: %s", buffer + 2);
+        fprintf(stderr, "Target: %s\n", to_client_fp);
+        fprintf(stderr, "Identifer: %s\n", buffer + 2);
         fprintf(stderr, "Msg: %s\n", buffer + 2 + 256);
     } else {
         // DEBUG */ printf("wrote to client\n");
