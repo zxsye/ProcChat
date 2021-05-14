@@ -237,7 +237,7 @@ int do_saycount(char * buffer, const char * domain, const char * to_daemon_fp, c
 
             // Build RECEIVE message: RECEIVE <identifier> <message>
             char draft[BUF_SIZE] = {0};
-            set_type(draft, Receive);
+            set_type(draft, Recvcont);
 
             const char * identity = FILEPATH_TO_IDEN(to_client_fp, domain);
             strncpy(draft + 2, identity, strlen(identity) - 3); // To remove _RD
