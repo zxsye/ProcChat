@@ -131,7 +131,7 @@ int do_recvcont(char * buffer, const char * to_client_fp) {
         fprintf(stderr, "Target: %s\n", to_client_fp);
         fprintf(stderr, "Identifer: %s\n", buffer + 2);
         fprintf(stderr, "Msg: %s\n", buffer + 2 + 256);
-        fprintf(stderr, "Terminate: %d\n", buffer[2048 - 1]);
+        fprintf(stderr, "Terminate: %d\n", (BYTE)buffer[2048 - 1]);
         /* DEBUG */ fprintf(stderr, "From: %s\nMsg: %s\n\n", buffer + 2, buffer + 2 + 256);
     }
     
@@ -291,7 +291,7 @@ int do_saycount(char * msg, const char * domain, const char * to_daemon_fp, cons
             fprintf(stderr, "Target: %s\n", pipepath);
             fprintf(stderr, "Identifer: %s\n", draft + 2);
             fprintf(stderr, "Msg: %s\n", draft + 2 + 256);
-            fprintf(stderr, "Terminate: %d\n\n", draft[2048 - 1]);
+            fprintf(stderr, "Terminate: %d\n", (BYTE)draft[2048 - 1]);
 
             // for (int i = 0; i < 2048; i++) {
             //     fprintf(stderr, "%c", buffer[i]);
