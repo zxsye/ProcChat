@@ -398,8 +398,8 @@ int start_daemon(int gevent_fd) {
     strcat(to_client_fp, "_RD");                        // domain/identifier_RD
     
     // Starting FIFO
-    fprintf(stderr, "%s\n", to_client_fp);
-    fprintf(stderr, "%s\n\n", to_daemon_fp);
+    /* DEBUG */fprintf(stderr, "%s\n", to_client_fp);
+    /* DEBUG */fprintf(stderr, "%s\n\n", to_daemon_fp);
     // @TODO: overwrite existing pipe if needed
     if ( mkfifo(to_client_fp, 0777) == -1 ) {
         // perror("Cannot make pipe to client");
