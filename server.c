@@ -89,7 +89,7 @@ int do_receive(char * buffer, const char * to_client_fp) {
         return -1;
     }
 
-    int fd = open(to_client_fp, O_WRONLY);
+    int fd = open(to_client_fp, O_NONBLOCK | O_WRONLY);
     if (fd < 0) {
         fprintf(stderr, "do_receive: cannot open %s\n", to_client_fp);
         return -1;
@@ -314,7 +314,7 @@ int start_daemon(int gevent_fd) {
 
     // Open pipe as FD
     int fd_dae_WR = open(to_client_fp, O_NONBLOCK, O_WRONLY);
-    int fd_dae_RD = open(to_daemon_fp, O_NONBLOCK, O_RDONLY);
+    int fd_dae_RD = open(to_daemon_fp, O_NONBLOCK, O_RDONLY, O_RDWR);
     if (fd_dae_RD < 0 || fd_dae_WR < 0) {
 		perror("Failed to open gevent FD");
 		return 1;
