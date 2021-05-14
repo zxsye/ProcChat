@@ -75,25 +75,24 @@ char * get_domain(char * string) {
     return string + DOMAIN_IX;
 }
 
-/*  Handles async monitoring of client, reporting back to global process
- */
-int daemon(int fd_dae_WR, int fd_dae_RD) {
-    /*
-    
-    Daemon stores shared memory of "fd_set allfds" for its own domain
-    with read and write set of fds.
 
-    When a message is received, it can pipe directly to all other daemons of the
-    same domain. Using to_client pipe, the current daemon sends <RECEIVE> 
-    message to other daemons.
+/*  Relays <RECEIVE IDENTIFIER MSG> to client */
+int do_receive(char * buffer, const char * to_client_fp) {
+    if (get_type(buffer) != Receive) {
+        return -1;
+    }
 
-    They will handle independently.
-
-    */
-
-
-    return 0;
+    int fd = open(to_client_fp, O_WRONLY);
+    if (write(fd, buffer, 2048) < 0) {
+        perror("Failed to write");
+    } else {
+        // DEBUG */ printf("wrote to client\n");
+        // DEBUG */ printf("From: %s\nMsg: %s\n", buffer + 2, buffer + 2 + 256);
+    }
+    close(fd);
+    return 1;
 }
+
 
 /*
 Takes in buffer for maximum 2048 characters.
@@ -119,7 +118,7 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp, const 
         }
         
         // Directly write to client RD
-        if (filename[filenm_len - 2] == 'R' && filename[filenm_len - 1] == 'D') {
+        if (filename[filenm_len - 2] == 'W' && filename[filenm_len - 1] == 'R') {
 
             char pipepath[BUF_SIZE];
             strcpy(pipepath, domain);
@@ -127,21 +126,22 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp, const 
             strcat(pipepath, filename);
 
             // Skip write pipes to own client
-            //DEBUG*/printf("From: %s :: %s\n", to_client_fp, pipepath);
             
-            if (strcmp(pipepath, to_client_fp) == 0) {  
+            if (strcmp(pipepath, to_daemon_fp) == 0) {  
                 //DEBUG*/printf("# Cannot write to self\n");
                 continue;
             }
 
+            //DEBUG*/printf("Writing from: %s :: %s\n", to_daemon_fp, pipepath);
             // Writing now
-            int fd = open(pipepath, O_NONBLOCK, O_WRONLY);
+            int fd = open(pipepath, O_WRONLY);
             if (fd < 0) {
                 perror("do_say: Error in piping message to other clients");
                 return -1;
             }
+
             // Build RECEIVE message: RECEIVE <identifier> <message>
-            char draft[BUF_SIZE];
+            char draft[BUF_SIZE] = {0};
             set_type(draft, Receive);
 
             const char * identity = FILEPATH_TO_IDEN(to_client_fp, domain);
@@ -191,8 +191,10 @@ int handle_daemon_update(int fd_dae_RD, int fd_dae_WR,
     
     // Check message type
     if ( get_type(buffer) == Say) {
-        //DEBUG*/printf("\n==== doing say ====\n");
+        // DEBUG*/printf("\n==== doing say ====\n");
+        
         int st = do_say(buffer, domain, to_daemon_fp, to_client_fp); // write to other daemons
+
         if (st == -1) {
             perror("Failed do_say");
             return -1;
@@ -200,7 +202,8 @@ int handle_daemon_update(int fd_dae_RD, int fd_dae_WR,
 
     } else if ( get_type(buffer) == Saycount) {
     } else if ( get_type(buffer) == Receive) {
-        // DAEMON DOES NOT PROCESS RECEIVE
+        // DEBUG */ printf("\n===== doing receive ====\n");
+        do_receive(buffer, to_client_fp);
     }
     return 0;
 }
@@ -319,7 +322,7 @@ int start_daemon(int gevent_fd) {
 		
 		int ret = select(maxfd, &allfds, NULL, NULL, NULL);
 
-        //DEBUG*/printf("\n !!!!!!!! UPDATE !!!!!!!! \n");
+        // DEBUG*/printf("\n !!!!!!!! UPDATE !!!!!!!! \n");
 		if (-1 == ret) {
 			fprintf(stderr, "Error from select");	
             //@todo: return here
