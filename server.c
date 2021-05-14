@@ -84,12 +84,12 @@ char * get_domain(char * string) {
 int do_receive(char * buffer, const char * to_client_fp) {
     perror("Doing receive");
     errno = 0;
-    
+
     if (get_type(buffer) != Receive) {
         return -1;
     }
 
-    int fd = open(to_client_fp, O_NONBLOCK, O_WRONLY);
+    int fd = open(to_client_fp, O_WRONLY);
     if (fd < 0) {
         fprintf(stderr, "do_receive: cannot open %s\n", to_client_fp);
         return -1;
