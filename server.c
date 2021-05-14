@@ -83,7 +83,7 @@ int do_receive(char * buffer, const char * to_client_fp) {
         return -1;
     }
 
-    int fd = open(to_client_fp, O_WRONLY);
+    int fd = open(to_client_fp, O_NONBLOCK, O_WRONLY);
     if (write(fd, buffer, 2048) < 0) {
         perror("Failed to write");
     } else {
