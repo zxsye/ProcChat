@@ -90,7 +90,7 @@ int do_receive(char * buffer, const char * to_client_fp) {
         return -1;
     }
 
-    int fd = open(to_client_fp, O_RDWR);
+    int fd = open(to_client_fp, O_NONBLOCK | O_RDWR);
     if (fd < 0) {
         fprintf(stderr, "do_receive: cannot open %s\n", to_client_fp);
         return -1;
@@ -180,7 +180,7 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp, const 
 
             //DEBUG*/printf("Writing from: %s :: %s\n", to_daemon_fp, pipepath);
             // Writing now
-            int fd = open(pipepath, O_RDWR);
+            int fd = open(pipepath, O_NONBLOCK | O_RDWR);
             if (fd < 0) {
                 perror("do_say: Error in piping message to other clients");
                 return -1;
@@ -267,7 +267,7 @@ int do_saycount(char * msg, const char * domain, const char * to_daemon_fp, cons
 
             //DEBUG*/printf("Writing from: %s :: %s\n", to_daemon_fp, pipepath);
             // Writing now
-            int fd = open(pipepath, O_RDWR);
+            int fd = open(pipepath, O_NONBLOCK | O_RDWR);
             if (fd < 0) {
                 perror("do_say: Error in piping message to other clients");
                 return -1;
@@ -440,8 +440,8 @@ int start_daemon(int gevent_fd) {
     close(gevent_fd);
 
     // Open pipe as FD
-    int fd_dae_WR = open(to_client_fp, O_RDWR);
-    int fd_dae_RD = open(to_daemon_fp, O_RDWR);
+    int fd_dae_WR = open(to_client_fp, O_NONBLOCK | O_RDWR);
+    int fd_dae_RD = open(to_daemon_fp, O_NONBLOCK | O_RDWR);
     if (fd_dae_RD < 0 || fd_dae_WR < 0) {
 		perror("Failed to open gevent FD");
 		return 1;
