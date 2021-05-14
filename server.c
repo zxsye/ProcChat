@@ -175,7 +175,7 @@ int handle_daemon_update(int fd_dae_RD, const char * domain,
                           const char * to_client_fp, 
                           const char * to_daemon_fp)
 {
-    printf("@@@@@@@@@ %d @@@@@@@@@\n", getpid());
+    // printf("@@@@@@@@@ %d @@@@@@@@@\n", getpid());
     char buffer[BUF_SIZE];
     int nread = read(fd_dae_RD, buffer, BUF_SIZE);
     if (nread == -1) {
@@ -271,20 +271,20 @@ int start_daemon(int gevent_fd) {
     // ========== FORKING ========== //
     pid_t pid = fork();
     if (pid < 0) {
-        printf("@@@@@@@@@ PARENT: %d @@@@@@@@@\n", getpid());
         printf("Could not fork\n");
         return -1;
     }
 
     // Tell parent success
     if (pid != 0) {
+        // printf("@@@@@@@@@ PARENT: %d @@@@@@@@@\n", getpid());
         return 0;
     }
     errno = 0;
     //DEBUG*/printf("Child process started...\n");
 
     // Child process: daemon
-    printf("@@@@@@@@@ CHILD: %d @@@@@@@@@\n", getpid());
+    // printf("@@@@@@@@@ CHILD: %d @@@@@@@@@\n", getpid());
     close(gevent_fd);
 
     // Open pipe as FD
