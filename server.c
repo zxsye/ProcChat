@@ -82,14 +82,14 @@ char * get_domain(char * string) {
 
 /*  Relays <RECEIVE IDENTIFIER MSG> to client */
 int do_receive(char * buffer, const char * to_client_fp) {
-    /*DEBUG*/perror("Doing receive");
+    //DEBUG*/perror("Doing receive");
     //DEBUG*/errno = 0;
 
     if (get_type(buffer) != Receive) {
         return -1;
     }
 
-    int fd = open(to_client_fp, O_WRONLY);
+    int fd = open(to_client_fp, O_RDWR);
     if (fd < 0) {
         fprintf(stderr, "do_receive: cannot open %s\n", to_client_fp);
         return -1;
@@ -99,6 +99,34 @@ int do_receive(char * buffer, const char * to_client_fp) {
         fprintf(stderr, "Target: %s\n", to_client_fp);
         fprintf(stderr, "Identifer: %s\n", buffer + 2);
         fprintf(stderr, "Msg: %s\n\n", buffer + 2 + 256);
+    } else {
+        // DEBUG */ printf("wrote to client\n");
+        // DEBUG */ printf("From: %s\nMsg: %s\n", buffer + 2, buffer + 2 + 256);
+    }
+    close(fd);
+    return 1;
+}
+
+/*  Relays <RECEIVE IDENTIFIER MSG> to client */
+int do_recvcont(char * buffer, const char * to_client_fp) {
+    //DEBUG*/perror("Doing receive");
+    //DEBUG*/errno = 0;
+
+    if (get_type(buffer) != Recvcont) {
+        return -1;
+    }
+
+    int fd = open(to_client_fp, O_RDWR);
+    if (fd < 0) {
+        fprintf(stderr, "do_receive: cannot open %s\n", to_client_fp);
+        return -1;
+    }
+    if (write(fd, buffer, 2048) < 0) {
+        fprintf(stderr, "do_receive: cannot write()\n");
+        fprintf(stderr, "Target: %s\n", to_client_fp);
+        fprintf(stderr, "Identifer: %s\n", buffer + 2);
+        fprintf(stderr, "Msg: %s\n", buffer + 2 + 256);
+        fprintf(stderr, "Terminate: %d\n\n", buffer[2048 - 1]);
     } else {
         // DEBUG */ printf("wrote to client\n");
         // DEBUG */ printf("From: %s\nMsg: %s\n", buffer + 2, buffer + 2 + 256);
@@ -295,7 +323,7 @@ int handle_daemon_update(int fd_dae_RD, int fd_dae_WR,
     } else if ( get_type(buffer) == Receive) {
         // DEBUG */ printf("\n===== doing receive ====\n");
         do_receive(buffer, to_client_fp);
-
+        
     } else if ( get_type(buffer) == Recvcont) {
         do_receive(buffer, to_client_fp);
     }
