@@ -128,6 +128,7 @@ int do_recvcont(char * buffer, const char * to_client_fp) {
         fprintf(stderr, "do_receive: cannot write()\n");
     } else {
         close(fd);
+        sleep(1);
         /* DEBUG */ fprintf(stderr, "YAY wrote to client\n");
         fprintf(stderr, "Target: %s\n", to_client_fp);
         fprintf(stderr, "Identifer: %s\n", buffer + 2);
