@@ -51,6 +51,7 @@ enum type get_type(char * string) {
     //     BYTE ret = string[1];
     //     return ret;
     // }
+    return *(short*)string;
     if (string[1] == 0) {
         BYTE ret = string[0];
         return ret;
@@ -112,7 +113,7 @@ int do_recvcont(char * buffer, const char * to_client_fp) {
     /*DEBUG*/perror("Doing recvcont");
     //DEBUG*/errno = 0;
 
-    if (get_type(buffer) != Recvcont) {
+    if (get_type(buffer) != Recvcont) { 
         return -1;
     }
 
