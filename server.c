@@ -92,7 +92,6 @@ int do_receive(char * buffer, const char * to_client_fp) {
 
     int fd = open(to_client_fp, O_NONBLOCK | O_RDWR);
     if (fd < 0) {
-        close(fd);
         fprintf(stderr, "do_receive: cannot open %s\n", to_client_fp);
         return -1;
     }
@@ -121,13 +120,14 @@ int do_recvcont(char * buffer, const char * to_client_fp) {
 
     int fd = open(to_client_fp, O_NONBLOCK | O_RDWR);
     if (fd < 0) {
-        close(fd);
         fprintf(stderr, "do_receive: cannot open %s\n", to_client_fp);
         return -1;
     }
     if (write(fd, buffer, 2048) < 0) {
+        close(fd);
         fprintf(stderr, "do_receive: cannot write()\n");
     } else {
+        close(fd);
 
         /* DEBUG */ fprintf(stderr, "YAY wrote to client\n");
         fprintf(stderr, "Target: %s\n", to_client_fp);
@@ -136,7 +136,6 @@ int do_recvcont(char * buffer, const char * to_client_fp) {
         fprintf(stderr, "Terminate: %d\n", (BYTE)buffer[2048 - 1]);
         /* DEBUG */ fprintf(stderr, "From: %s\nMsg: %s\n\n", buffer + 2, buffer + 2 + 256);
     }
-    close(fd);
     
     return 1;
 }
@@ -185,7 +184,6 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp, const 
             // Writing now
             int fd = open(pipepath, O_NONBLOCK | O_RDWR);
             if (fd < 0) {
-                close(fd);
                 perror("do_say: Error in piping message to other clients");
                 return -1;
             }
@@ -271,9 +269,8 @@ int do_saycount(char * msg, const char * domain, const char * to_daemon_fp, cons
 
             //DEBUG*/printf("Writing from: %s :: %s\n", to_daemon_fp, pipepath);
             // Writing now
-            int fd = open(pipepath, O_NONBLOCK | O_RDWR);
+            int fd = open(pipepath, O_WRONLY);
             if (fd < 0) {
-                close(fd);
                 perror("do_say: Error in piping message to other clients");
                 return -1;
             }
@@ -446,7 +443,6 @@ int start_daemon(int gevent_fd) {
 
     // Open pipe as FD
     int fd_dae_WR = open(to_client_fp, O_NONBLOCK | O_RDWR);
-    // int fd_dae_WR = 0;
     int fd_dae_RD = open(to_daemon_fp, O_NONBLOCK | O_RDWR);
     if (fd_dae_RD < 0 || fd_dae_WR < 0) {
 		perror("Failed to open gevent FD");
@@ -470,7 +466,7 @@ int start_daemon(int gevent_fd) {
         timeout = timeout;
 		
 		int ret = select(maxfd, &allfds, NULL, NULL, NULL);
-        
+
         // DEBUG*/printf("\n !!!!!!!! UPDATE !!!!!!!! \n");
 		if (-1 == ret) {
 			fprintf(stderr, "Error from select");	
@@ -507,18 +503,19 @@ int main() {
 		perror("Cannot make fifo");
 	}
 
+    int gevent_fd = open("gevent", O_RDWR);
+    if (gevent_fd < 0) {
+        perror("Failed to open gevent FD");
+        return 1;
+    }
+
+    int maxfd = gevent_fd + 1;
+
+    fd_set allfds;
+    struct timeval timeout;
+
 	while (1)
 	{
-        int gevent_fd = open("gevent", O_NONBLOCK | O_RDWR);
-        if (gevent_fd < 0) {
-            perror("Failed to open gevent FD");
-            return 1;
-        }
-
-        int maxfd = gevent_fd + 1;
-
-        fd_set allfds;
-        struct timeval timeout;
 
 		FD_ZERO(&allfds); //   000000
 		FD_SET(gevent_fd, &allfds); // 100000
@@ -545,8 +542,8 @@ int main() {
             }
 		}
 
-        close(gevent_fd);
 	}
+    close(gevent_fd);
 
 
     // run_daemon(int fd_RD, int fd_WR);
