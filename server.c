@@ -92,11 +92,11 @@ int daemon(int fd_dae_WR, int fd_dae_RD) {
 }
 
 /*  Relays <RECEIVE IDENTIFIER MSG> to client */
-int do_receive(char * buffer, const char * domain, const char * to_client_fp) {
+int do_receive(char * buffer, const char * to_client_fp) {
     if (get_type(buffer) != Receive) {
         return -1;
     }
-    
+
     int fd = open(to_client_fp, O_WRONLY);
     write(fd, buffer, sizeof(buffer));
     return 1;
@@ -171,7 +171,7 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp) {
 Return 0 = good handling
 
 */
-int handle_client_message(int fd_dae_RD, const char * domain, 
+int handle_daemon_update(int fd_dae_RD, const char * domain, 
                           const char * to_client_fp, 
                           const char * to_daemon_fp)
 {
@@ -194,7 +194,7 @@ int handle_client_message(int fd_dae_RD, const char * domain,
     } else if ( get_type(buffer) == Saycount) {
     } else if ( get_type(buffer) == Receive) {
         printf("Received!\n");
-        // do_receive(buffer, domain, to_client_fp);
+        do_receive(buffer, to_client_fp);
     }
     return 0;
 }
@@ -322,7 +322,7 @@ int start_daemon(int gevent_fd) {
 		} else if (FD_ISSET(fd_dae_RD, &allfds)) {
 			// Start reading from clients
             //DEBUG*/printf("Handling message...\n");
-            int succ = handle_client_message(fd_dae_RD, domain_str, to_client_fp, 
+            int succ = handle_daemon_update(fd_dae_RD, domain_str, to_client_fp, 
                                              to_daemon_fp);
             if (succ == -1) {
                 return -1; //@TODO: change to something else
