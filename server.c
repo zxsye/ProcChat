@@ -267,7 +267,7 @@ int do_saycount(char * msg, const char * domain, const char * to_daemon_fp, cons
 
             //DEBUG*/printf("Writing from: %s :: %s\n", to_daemon_fp, pipepath);
             // Writing now
-            int fd = open(pipepath, O_WRONLY);
+            int fd = open(pipepath, O_RDWR);
             if (fd < 0) {
                 perror("do_say: Error in piping message to other clients");
                 return -1;
