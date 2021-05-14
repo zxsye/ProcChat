@@ -109,12 +109,12 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp, const 
     }
   
     while ((de = readdir(dr)) != NULL) {
-        printf("\n**** Directory: %s ****\n", de->d_name);
+        //DEBUG*/printf("\n**** Directory: %s ****\n", de->d_name);
         
         char * filename = de->d_name;
         long filenm_len = strlen(filename);
         if (strlen(filename) <= 2) {
-            perror("Filename too short");
+            //DEBUG*/perror("Filename too short");
             continue;
         }
         
@@ -127,10 +127,10 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp, const 
             strcat(pipepath, filename);
 
             // Skip write pipes to own client
-            printf("From: %s :: %s\n", to_client_fp, pipepath);
+            //DEBUG*/printf("From: %s :: %s\n", to_client_fp, pipepath);
             
             if (strcmp(pipepath, to_client_fp) == 0) {  
-                printf("# Cannot write to self\n");
+                //DEBUG*/printf("# Cannot write to self\n");
                 continue;
             }
 
@@ -155,20 +155,20 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp, const 
             }
 
             // CHECKING MESSAGE SENT PROPERLY
-            printf("Type = ");
-            if (get_type(draft) == Receive) {
-                printf("Receive\n");
-            } else {
-                printf("ERROR\n");
-            }
-            printf("iden: %s\n", draft + 2);
-            printf("msg: %s\n\n", draft + 2 + 256);
+            // printf("Type = ");
+            // if (get_type(draft) == Receive) {
+            //     printf("Receive\n");
+            // } else {
+            //     printf("ERROR\n");
+            // }
+            // printf("iden: %s\n", draft + 2);
+            // printf("msg: %s\n\n", draft + 2 + 256);
             ////////
             
             close(fd);
         }
     }
-    printf("Finished reading directory\n");
+    //DEBUG*/printf("Finished reading directory\n");
     closedir(dr);
     return 0;
 }
@@ -191,7 +191,7 @@ int handle_daemon_update(int fd_dae_RD, int fd_dae_WR,
     
     // Check message type
     if ( get_type(buffer) == Say) {
-        printf("\n==== doing say ====\n");
+        //DEBUG*/printf("\n==== doing say ====\n");
         int st = do_say(buffer, domain, to_daemon_fp, to_client_fp); // write to other daemons
         if (st == -1) {
             perror("Failed do_say");
@@ -319,7 +319,7 @@ int start_daemon(int gevent_fd) {
 		
 		int ret = select(maxfd, &allfds, NULL, NULL, NULL);
 
-        printf("\n !!!!!!!! UPDATE !!!!!!!! \n");
+        //DEBUG*/printf("\n !!!!!!!! UPDATE !!!!!!!! \n");
 		if (-1 == ret) {
 			fprintf(stderr, "Error from select");	
             //@todo: return here
