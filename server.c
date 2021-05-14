@@ -104,7 +104,7 @@ int do_receive(char * buffer, const char * to_client_fp) {
         // DEBUG */ printf("wrote to client\n");
         // DEBUG */ printf("From: %s\nMsg: %s\n", buffer + 2, buffer + 2 + 256);
     }
-    // close(fd);
+    close(fd);
     return 1;
 }
 
@@ -124,10 +124,11 @@ int do_recvcont(char * buffer, const char * to_client_fp) {
         return -1;
     }
     if (write(fd, buffer, 2048) < 0) {
-        // close(fd);
+        close(fd);
         fprintf(stderr, "do_receive: cannot write()\n");
     } else {
-        // close(fd);
+        close(fd);
+
         /* DEBUG */ fprintf(stderr, "YAY wrote to client\n");
         fprintf(stderr, "Target: %s\n", to_client_fp);
         fprintf(stderr, "Identifer: %s\n", buffer + 2);
@@ -212,7 +213,7 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp, const 
             // printf("msg: %s\n\n", draft + 2 + 256);
             ////////
             
-            // close(fd);
+            close(fd);
         }
     }
     //DEBUG*/printf("Finished reading directory\n");
@@ -299,7 +300,7 @@ int do_saycount(char * msg, const char * domain, const char * to_daemon_fp, cons
             //     fprintf(stderr, "%c", buffer[i]);
             // }
             
-            // close(fd);
+            close(fd);
         }
     }
     //DEBUG*/printf("Finished reading directory\n");
