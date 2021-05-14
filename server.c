@@ -89,7 +89,7 @@ int do_receive(char * buffer, const char * to_client_fp) {
         return -1;
     }
 
-    int fd = open(to_client_fp, O_RDWR);
+    int fd = open(to_client_fp, O_WRONLY);
     if (fd < 0) {
         fprintf(stderr, "do_receive: cannot open %s\n", to_client_fp);
         return -1;
@@ -295,6 +295,7 @@ int handle_daemon_update(int fd_dae_RD, int fd_dae_WR,
     } else if ( get_type(buffer) == Receive) {
         // DEBUG */ printf("\n===== doing receive ====\n");
         do_receive(buffer, to_client_fp);
+
     } else if ( get_type(buffer) == Recvcont) {
         do_receive(buffer, to_client_fp);
     }
