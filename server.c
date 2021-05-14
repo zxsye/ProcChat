@@ -310,36 +310,42 @@ int do_saycount(char * msg, const char * domain, const char * to_daemon_fp, cons
 
 
 */
-int handle_daemon_update(char * msg,
+int handle_daemon_update(int fd_dae_RD, int fd_dae_WR, 
                           const char * to_client_fp, const char * to_daemon_fp,
                           const char * domain)
 {
     // printf("@@@@@@@@@ %d @@@@@@@@@\n", getpid());
-    
+    char buffer[BUF_SIZE];
+    int nread = read(fd_dae_RD, buffer, BUF_SIZE);
+    if (nread == -1) {
+        printf("Failed to read\n");
+        return -1;
+    }
     
     // Check message type
-    if ( get_type(msg) == Say) {
+    if ( get_type(buffer) == Say) {
         // DEBUG*/printf("\n==== doing say ====\n");
-        int st = do_say(msg, domain, to_daemon_fp, to_client_fp); // write to other daemons
-        if (st == -1) {
-            perror("Failed do_say");
-            return -1;
-        }
-
-    } else if ( get_type(msg) == Saycount) {
-        int st = do_saycount(msg, domain, to_daemon_fp, to_client_fp); // write to other daemons
-        if (st == -1) {
-            perror("Failed do_say");
-            return -1;
-        }
-
-    } else if ( get_type(msg) == Receive) {
-        // DEBUG */ printf("\n===== doing receive ====\n");
-        do_receive(msg, to_client_fp);
         
-    } else if ( get_type(msg) == Recvcont) {
-        do_recvcont(msg, to_client_fp);
+        int st = do_say(buffer, domain, to_daemon_fp, to_client_fp); // write to other daemons
 
+        if (st == -1) {
+            perror("Failed do_say");
+            return -1;
+        }
+
+    } else if ( get_type(buffer) == Saycount) {
+        int st = do_saycount(buffer, domain, to_daemon_fp, to_client_fp); // write to other daemons
+
+        if (st == -1) {
+            perror("Failed do_say");
+            return -1;
+        }
+    } else if ( get_type(buffer) == Receive) {
+        // DEBUG */ printf("\n===== doing receive ====\n");
+        do_receive(buffer, to_client_fp);
+        
+    } else if ( get_type(buffer) == Recvcont) {
+        do_recvcont(buffer, to_client_fp);
     }
     return 0;
 }
@@ -399,8 +405,8 @@ int start_daemon(int gevent_fd) {
     strcat(to_client_fp, "_RD");                        // domain/identifier_RD
     
     // Starting FIFO
-    // DEBUG */fprintf(stderr, "%s\n", to_client_fp);
-    // DEBUG */fprintf(stderr, "%s\n\n", to_daemon_fp);
+    // printf("%s\n", to_client_fp);
+    // printf("%s\n", to_daemon_fp);
     // @TODO: overwrite existing pipe if needed
     if ( mkfifo(to_client_fp, 0777) == -1 ) {
         // perror("Cannot make pipe to client");
@@ -433,24 +439,23 @@ int start_daemon(int gevent_fd) {
     // printf("@@@@@@@@@ CHILD: %d @@@@@@@@@\n", getpid());
     close(gevent_fd);
 
+    // Open pipe as FD
+    int fd_dae_WR = open(to_client_fp, O_RDWR);
+    int fd_dae_RD = open(to_daemon_fp, O_RDWR);
+    if (fd_dae_RD < 0 || fd_dae_WR < 0) {
+		perror("Failed to open gevent FD");
+		return 1;
+	}
+    
+    // Reading from client
+	fd_set allfds;
+	int maxfd = fd_dae_RD + 1;
+	struct timeval timeout;
 
     // ========= Monitoring client =========
     //DEBUG*/printf("Begin monitoring client...\n");
 	while (1)
 	{
-        // Open pipe as FD
-        // int fd_dae_WR = open(to_client_fp, O_RDWR);
-        int fd_dae_RD = open(to_daemon_fp, O_RDWR);
-        if (fd_dae_RD < 0) {
-            perror("Failed to open gevent FD");
-            return 1;
-        }
-        
-        // Reading from client
-        fd_set allfds;
-        int maxfd = fd_dae_RD + 1;
-        struct timeval timeout;
-        
 		FD_ZERO(&allfds); //   000000
 		FD_SET(fd_dae_RD, &allfds); // 100000
         
@@ -469,16 +474,9 @@ int start_daemon(int gevent_fd) {
 
 		} else if (FD_ISSET(fd_dae_RD, &allfds)) {
 			// Start reading from clients
-            char msg[BUF_SIZE];
-            int nread = read(fd_dae_RD, msg, BUF_SIZE);
-            if (nread == -1) {
-                printf("Failed to read\n");
-                return -1;
-            }
-            close(fd_dae_RD);
             //DEBUG*/printf("Handling message...\n");
 
-            int succ = handle_daemon_update(msg,
+            int succ = handle_daemon_update(fd_dae_RD, fd_dae_WR,
                                             to_client_fp, to_daemon_fp,
                                             domain_str);
 
@@ -489,7 +487,8 @@ int start_daemon(int gevent_fd) {
 		}
 	}
     
-    
+    close(fd_dae_WR);
+    close(fd_dae_RD);
 
     return 1;
 }
