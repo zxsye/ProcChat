@@ -222,10 +222,10 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp, const 
 /*
 Takes in buffer for maximum 2048 characters.
 */
-int do_saycount(char * buffer, const char * domain, const char * to_daemon_fp, const char * to_client_fp) {
+int do_saycount(char * msg, const char * domain, const char * to_daemon_fp, const char * to_client_fp) {
 
     fprintf(stderr, "\ndo_saycount:\n");
-    if (get_type(buffer) != Saycount) {
+    if (get_type(msg) != Saycount) {
         fprintf(stderr, "Failed do_saycount:\n");
         return -1;
     }
@@ -280,15 +280,15 @@ int do_saycount(char * buffer, const char * domain, const char * to_daemon_fp, c
             const char * identity = FILEPATH_TO_IDEN(to_client_fp, domain);
             strncpy(draft + 2, identity, strlen(identity) - 3); // To remove _RD
             draft[2 + strlen(identity) - 3] = '\0';
-            strcpy(draft + 2 + 256, SAY_MSG_INDEX(buffer));
+            strcpy(draft + 2 + 256, SAY_MSG_INDEX(msg));
 
-            draft[BUF_SIZE - 1] = buffer[BUF_SIZE - 1];
+            draft[BUF_SIZE - 1] = msg[BUF_SIZE - 1];
             // Write to other clients
             if (write(fd, draft, 2048) < -1) {
                 perror("Failed writing");
             }
 
-            fprintf(stderr, "Target: %s\n", to_client_fp);
+            fprintf(stderr, "Target: %s\n", pipepath);
             fprintf(stderr, "Identifer: %s\n", draft + 2);
             fprintf(stderr, "Msg: %s\n", draft + 2 + 256);
             fprintf(stderr, "Terminate: %d\n\n", draft[2048 - 1]);
@@ -309,7 +309,7 @@ int do_saycount(char * buffer, const char * domain, const char * to_daemon_fp, c
 
 
 */
-int handle_daemon_update(char * buffer,
+int handle_daemon_update(char * msg,
                           const char * to_client_fp, const char * to_daemon_fp,
                           const char * domain)
 {
@@ -317,29 +317,28 @@ int handle_daemon_update(char * buffer,
     
     
     // Check message type
-    if ( get_type(buffer) == Say) {
+    if ( get_type(msg) == Say) {
         // DEBUG*/printf("\n==== doing say ====\n");
-        
-        int st = do_say(buffer, domain, to_daemon_fp, to_client_fp); // write to other daemons
-
+        int st = do_say(msg, domain, to_daemon_fp, to_client_fp); // write to other daemons
         if (st == -1) {
             perror("Failed do_say");
             return -1;
         }
 
-    } else if ( get_type(buffer) == Saycount) {
-        int st = do_saycount(buffer, domain, to_daemon_fp, to_client_fp); // write to other daemons
-
+    } else if ( get_type(msg) == Saycount) {
+        int st = do_saycount(msg, domain, to_daemon_fp, to_client_fp); // write to other daemons
         if (st == -1) {
             perror("Failed do_say");
             return -1;
         }
-    } else if ( get_type(buffer) == Receive) {
+
+    } else if ( get_type(msg) == Receive) {
         // DEBUG */ printf("\n===== doing receive ====\n");
-        do_receive(buffer, to_client_fp);
+        do_receive(msg, to_client_fp);
         
-    } else if ( get_type(buffer) == Recvcont) {
-        do_recvcont(buffer, to_client_fp);
+    } else if ( get_type(msg) == Recvcont) {
+        do_recvcont(msg, to_client_fp);
+
     }
     return 0;
 }
@@ -460,8 +459,6 @@ int start_daemon(int gevent_fd) {
 		
 		int ret = select(maxfd, &allfds, NULL, NULL, NULL);
 
-
-
         // DEBUG*/printf("\n !!!!!!!! UPDATE !!!!!!!! \n");
 		if (-1 == ret) {
 			fprintf(stderr, "Error from select");	
@@ -471,8 +468,8 @@ int start_daemon(int gevent_fd) {
 
 		} else if (FD_ISSET(fd_dae_RD, &allfds)) {
 			// Start reading from clients
-            char buffer[BUF_SIZE];
-            int nread = read(fd_dae_RD, buffer, BUF_SIZE);
+            char msg[BUF_SIZE];
+            int nread = read(fd_dae_RD, msg, BUF_SIZE);
             if (nread == -1) {
                 printf("Failed to read\n");
                 return -1;
@@ -480,7 +477,7 @@ int start_daemon(int gevent_fd) {
             close(fd_dae_RD);
             //DEBUG*/printf("Handling message...\n");
 
-            int succ = handle_daemon_update(buffer,
+            int succ = handle_daemon_update(msg,
                                             to_client_fp, to_daemon_fp,
                                             domain_str);
 
