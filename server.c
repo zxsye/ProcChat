@@ -310,7 +310,7 @@ int do_saycount(char * msg, const char * domain, const char * to_daemon_fp, cons
 
 
 */
-int handle_daemon_update(int fd_dae_RD, int fd_dae_WR, 
+int handle_daemon_update(int fd_dae_RD,
                           const char * to_client_fp, const char * to_daemon_fp,
                           const char * domain)
 {
@@ -440,9 +440,8 @@ int start_daemon(int gevent_fd) {
     close(gevent_fd);
 
     // Open pipe as FD
-    int fd_dae_WR = open(to_client_fp, O_RDWR);
     int fd_dae_RD = open(to_daemon_fp, O_RDWR);
-    if (fd_dae_RD < 0 || fd_dae_WR < 0) {
+    if (fd_dae_RD < 0) {
 		perror("Failed to open gevent FD");
 		return 1;
 	}
@@ -476,7 +475,7 @@ int start_daemon(int gevent_fd) {
 			// Start reading from clients
             //DEBUG*/printf("Handling message...\n");
 
-            int succ = handle_daemon_update(fd_dae_RD, fd_dae_WR,
+            int succ = handle_daemon_update(fd_dae_RD,
                                             to_client_fp, to_daemon_fp,
                                             domain_str);
 
@@ -487,7 +486,6 @@ int start_daemon(int gevent_fd) {
 		}
 	}
     
-    close(fd_dae_WR);
     close(fd_dae_RD);
 
     return 1;
