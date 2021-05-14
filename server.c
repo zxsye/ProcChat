@@ -117,7 +117,7 @@ int do_recvcont(char * buffer, const char * to_client_fp) {
         return -1;
     }
 
-    int fd = open(to_client_fp, O_RDWR);
+    int fd = open(to_client_fp, O_NONBLOCK | O_RDWR);
     if (fd < 0) {
         fprintf(stderr, "do_receive: cannot open %s\n", to_client_fp);
         return -1;
@@ -127,12 +127,12 @@ int do_recvcont(char * buffer, const char * to_client_fp) {
         fprintf(stderr, "do_receive: cannot write()\n");
     } else {
         close(fd);
-        /* DEBUG */ printf("wrote to client\n");
+        /* DEBUG */ perror("wrote to client\n");
         fprintf(stderr, "Target: %s\n", to_client_fp);
         fprintf(stderr, "Identifer: %s\n", buffer + 2);
         fprintf(stderr, "Msg: %s\n", buffer + 2 + 256);
         fprintf(stderr, "Terminate: %d\n\n", buffer[2048 - 1]);
-        /* DEBUG */ printf("From: %s\nMsg: %s\n", buffer + 2, buffer + 2 + 256);
+        /* DEBUG */ fprintf(stderr, "From: %s\nMsg: %s\n", buffer + 2, buffer + 2 + 256);
     }
     
     return 1;
