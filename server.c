@@ -33,7 +33,6 @@
 #define RECEIVE_MSG_INDEX(draft) (draft + 2 + 256)
 #define RECEIVE_ID_INDEX(draft) (draft + 2)
 #define SAY_MSG_INDEX(draft) (draft + 2)
-#define SET_RECEIVE(draft) ( *(short*)draft = Receive)
 #define FILEPATH_TO_IDEN(filepath, domain) (filepath + strlen(domain) + 1)
 
 enum type {
@@ -53,6 +52,11 @@ enum type get_type(char * string) {
         return ret;
     }
     return -1;
+}
+
+void set_type(char * string, enum type t) {
+    string[0] = 0;
+    string[1] = t;
 }
 
 typedef struct pipeline {
@@ -91,22 +95,10 @@ int daemon(int fd_dae_WR, int fd_dae_RD) {
     return 0;
 }
 
-/*  Relays <RECEIVE IDENTIFIER MSG> to client */
-int do_receive(char * buffer, const char * to_client_fp) {
-    if (get_type(buffer) != Receive) {
-        return -1;
-    }
-
-    int fd = open(to_client_fp, O_WRONLY);
-    write(fd, buffer, sizeof(buffer));
-    return 1;
-}
-
 /*
 Takes in buffer for maximum 2048 characters.
 */
-int do_say(char * buffer, const char * domain, const char * to_daemon_fp) {
-    printf("\n=== do_say ===\n");
+int do_say(char * buffer, const char * domain, const char * to_daemon_fp, const char * to_client_fp) {
     // Find all other client handlers in current domain
     struct dirent *de;              // Pointer for directory entry
     DIR *dr = opendir(domain);      // opendir() returns a pointer of DIR type. 
@@ -117,63 +109,77 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp) {
     }
   
     while ((de = readdir(dr)) != NULL) {
-        printf("\n= Directory: %s =\n", de->d_name);
+        printf("\n**** Directory: %s ****\n", de->d_name);
+        
         char * filename = de->d_name;
         long filenm_len = strlen(filename);
-        if (filenm_len <= 2) {
+        if (strlen(filename) <= 2) {
             perror("Filename too short");
             continue;
         }
         
-        char pipepath[BUF_SIZE];
-        strcpy(pipepath, domain);
-        strcat(pipepath, "/");
-        strcat(pipepath, filename);
+        // Directly write to client RD
+        if (filename[filenm_len - 2] == 'R' && filename[filenm_len - 1] == 'D') {
 
-        // Skip write pipes to own client
-        printf("...Checking own pipe...\n");
-        printf("%s :: %s\n", pipepath, to_daemon_fp);
-        
-        if (strcmp(pipepath, to_daemon_fp) == 0) {  
-            printf("# Cannot write to self\n");
-            continue;
-        }
+            char pipepath[BUF_SIZE];
+            strcpy(pipepath, domain);
+            strcat(pipepath, "/");
+            strcat(pipepath, filename);
 
-        printf("\nWriting to pipe\n");
-        // Only write to WR pipes: we need to WRITE to other daemons
-        if (filename[filenm_len - 2] == 'W' && filename[filenm_len - 1] == 'R') {
+            // Skip write pipes to own client
+            printf("From: %s :: %s\n", to_client_fp, pipepath);
             
-            
-            int fd = open(pipepath, O_WRONLY);
+            if (strcmp(pipepath, to_client_fp) == 0) {  
+                printf("# Cannot write to self\n");
+                continue;
+            }
+
+            // Writing now
+            int fd = open(pipepath, O_NONBLOCK, O_WRONLY);
             if (fd < 0) {
                 perror("do_say: Error in piping message to other clients");
                 return -1;
             }
-            // Write to other pipes: RECEIVE <identifier> <message>
+            // Build RECEIVE message: RECEIVE <identifier> <message>
             char draft[BUF_SIZE];
-            SET_RECEIVE(draft);
-            strcat(draft, FILEPATH_TO_IDEN(to_daemon_fp, domain));
-            strcat(draft, SAY_MSG_INDEX(buffer));
+            set_type(draft, Receive);
 
-            write(fd, draft, strlen( draft ) + 1);
-            printf("iden: %s\n", FILEPATH_TO_IDEN(to_daemon_fp, domain));
-            printf("msg: %s\n\n", SAY_MSG_INDEX(buffer));
+            const char * identity = FILEPATH_TO_IDEN(to_client_fp, domain);
+            strncpy(draft + 2, identity, strlen(identity) - 3); // To remove _RD
+            draft[2 + strlen(identity) - 3] = '\0';
+            strcpy(draft + 2 + 256, SAY_MSG_INDEX(buffer));
+
+            // Write to other clients
+            if (write(fd, draft, 2048) < -1) {
+                perror("Failed writing");
+            }
+
+            // CHECKING MESSAGE SENT PROPERLY
+            printf("Type = ");
+            if (get_type(draft) == Receive) {
+                printf("Receive\n");
+            } else {
+                printf("ERROR\n");
+            }
+            printf("iden: %s\n", draft + 2);
+            printf("msg: %s\n\n", draft + 2 + 256);
+            ////////
             
             close(fd);
         }
     }
-            
+    printf("Finished reading directory\n");
     closedir(dr);
     return 0;
 }
 
 /*
-Return 0 = good handling
+
 
 */
-int handle_daemon_update(int fd_dae_RD, const char * domain, 
-                          const char * to_client_fp, 
-                          const char * to_daemon_fp)
+int handle_daemon_update(int fd_dae_RD, int fd_dae_WR, 
+                          const char * to_client_fp, const char * to_daemon_fp,
+                          const char * domain)
 {
     // printf("@@@@@@@@@ %d @@@@@@@@@\n", getpid());
     char buffer[BUF_SIZE];
@@ -185,16 +191,16 @@ int handle_daemon_update(int fd_dae_RD, const char * domain,
     
     // Check message type
     if ( get_type(buffer) == Say) {
-        printf("\n==== doing say\n");
-        int st = do_say(buffer, domain, to_daemon_fp); // write to other daemons
+        printf("\n==== doing say ====\n");
+        int st = do_say(buffer, domain, to_daemon_fp, to_client_fp); // write to other daemons
         if (st == -1) {
             perror("Failed do_say");
             return -1;
         }
+
     } else if ( get_type(buffer) == Saycount) {
     } else if ( get_type(buffer) == Receive) {
-        printf("Received!\n");
-        do_receive(buffer, to_client_fp);
+        // DAEMON DOES NOT PROCESS RECEIVE
     }
     return 0;
 }
@@ -313,6 +319,7 @@ int start_daemon(int gevent_fd) {
 		
 		int ret = select(maxfd, &allfds, NULL, NULL, NULL);
 
+        printf("\n !!!!!!!! UPDATE !!!!!!!! \n");
 		if (-1 == ret) {
 			fprintf(stderr, "Error from select");	
             //@todo: return here
@@ -322,8 +329,9 @@ int start_daemon(int gevent_fd) {
 		} else if (FD_ISSET(fd_dae_RD, &allfds)) {
 			// Start reading from clients
             //DEBUG*/printf("Handling message...\n");
-            int succ = handle_daemon_update(fd_dae_RD, domain_str, to_client_fp, 
-                                             to_daemon_fp);
+            int succ = handle_daemon_update(fd_dae_RD, fd_dae_WR,
+                                            to_client_fp, to_daemon_fp,
+                                            domain_str);
             if (succ == -1) {
                 return -1; //@TODO: change to something else
             }

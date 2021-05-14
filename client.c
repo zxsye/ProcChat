@@ -68,13 +68,46 @@ int main() {
     write(gevent_fd, msg, 2048);
 
     // SAY
-    sleep(2);
+    sleep(1);
     int wr = open("april/friday_WR", O_WRONLY);
+    msg[0] = 0;
     msg[1] = Say;
     strcpy(msg + 2, "what's up doc?");
 
     write(wr, msg, 2048);
 
+    // RECEIVE
+    sleep(2);
+    for (int i = 0; i < sizeof(msg); i++) {
+        msg[i] = 0;
+    }
+
+    printf("\nClient trying to receive...\n");
+
+    int rd = open("april/sunday_RD", O_NONBLOCK, O_RDONLY);
+    if (rd < 0) {
+        perror("cannot open sunday_rd");
+    }
+    printf("opened sunday_RD\n");
+
+    
+    if (read(rd, msg, sizeof(msg)) < 0) {
+        perror("cannot read");
+    }
+    printf("[ april/sunday receieved ]\n");
+    
+    printf("Type: %d %d\n", msg[0], msg[1]);
+    printf("From: %s\n", msg + 2);
+    printf("Message: %s\n", msg + 2 + 256);
+
+    for (int i = 0; i < sizeof(msg); i++) {
+        printf("%c ", msg[i]);
+    }
+
+    // CLOSING EVERYTHING
+    close(gevent_fd);
+    close(wr);
+    close(rd);
 
     return 0;
 }
