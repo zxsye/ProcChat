@@ -440,8 +440,9 @@ int start_daemon(int gevent_fd) {
     close(gevent_fd);
 
     // Open pipe as FD
-    int fd_dae_RD = open(to_daemon_fp, O_NONBLOCK | O_RDWR);
-    if (fd_dae_RD < 0) {
+    int fd_dae_WR = open(to_client_fp, O_RDWR);
+    int fd_dae_RD = open(to_daemon_fp, O_RDWR);
+    if (fd_dae_RD < 0 || fd_dae_WR < 0) {
 		perror("Failed to open gevent FD");
 		return 1;
 	}
@@ -486,6 +487,7 @@ int start_daemon(int gevent_fd) {
 		}
 	}
     
+    close(fd_dae_WR);
     close(fd_dae_RD);
 
     return 1;
