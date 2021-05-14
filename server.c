@@ -427,28 +427,25 @@ int start_daemon(char * buffer) {
         return 0;
     }
     errno = 0;
-    //DEBUG*/printf("Child process started...\n");
+
 
     // Child process: daemon
-    // printf("@@@@@@@@@ CHILD: %d @@@@@@@@@\n", getpid());
-
-    // Open pipe as FD
-    int fd_dae_WR = open(to_client_fp, O_RDWR);
-    int fd_dae_RD = open(to_daemon_fp, O_RDWR);
-    if (fd_dae_RD < 0 || fd_dae_WR < 0) {
-		perror("Failed to open gevent FD");
-		return 1;
-	}
-    
-    // Reading from client
-	fd_set allfds;
-	int maxfd = fd_dae_RD + 1;
-	struct timeval timeout;
-
     // ========= Monitoring client =========
-    //DEBUG*/printf("Begin monitoring client...\n");
 	while (1)
 	{
+        // Open pipe as FD
+        int fd_dae_WR = open(to_client_fp, O_RDWR);
+        int fd_dae_RD = open(to_daemon_fp, O_RDWR);
+        if (fd_dae_RD < 0 || fd_dae_WR < 0) {
+            perror("Failed to open gevent FD");
+            return 1;
+        }
+        
+        // Reading from client
+        fd_set allfds;
+        int maxfd = fd_dae_RD + 1;
+        struct timeval timeout;
+
 		FD_ZERO(&allfds); //   000000
 		FD_SET(fd_dae_RD, &allfds); // 100000
         
@@ -458,7 +455,7 @@ int start_daemon(char * buffer) {
 		
 		int ret = select(maxfd, &allfds, NULL, NULL, NULL);
 
-        // DEBUG*/printf("\n !!!!!!!! UPDATE !!!!!!!! \n");
+        // ========= UPDATE ========
 		if (-1 == ret) {
 			fprintf(stderr, "Error from select");	
             //@todo: return here
@@ -478,10 +475,10 @@ int start_daemon(char * buffer) {
             }
 
 		}
+        close(fd_dae_WR);
+        close(fd_dae_RD);
 	}
     
-    close(fd_dae_WR);
-    close(fd_dae_RD);
 
     return 1;
 }
