@@ -88,6 +88,10 @@ int do_receive(char * buffer, const char * to_client_fp) {
     }
 
     int fd = open(to_client_fp, O_NONBLOCK, O_WRONLY);
+    if (fd < 0) {
+        fprintf(stderr, "do_receive: cannot open %s\n", to_client_fp);
+        return -1;
+    }
     if (write(fd, buffer, 2048) < 0) {
         fprintf(stderr, "Target: %s\n", to_client_fp);
         fprintf(stderr, "Identifer: %s\n", buffer + 2);
