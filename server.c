@@ -101,8 +101,8 @@ int do_receive(char * buffer, const char * to_client_fp) {
         fprintf(stderr, "Identifer: %s\n", buffer + 2);
         fprintf(stderr, "Msg: %s\n\n", buffer + 2 + 256);
     } else {
-        /* DEBUG */ printf("wrote to client\n");
-        /* DEBUG */ printf("From: %s\nMsg: %s\n", buffer + 2, buffer + 2 + 256);
+        // DEBUG */ printf("wrote to client\n");
+        // DEBUG */ printf("From: %s\nMsg: %s\n", buffer + 2, buffer + 2 + 256);
     }
     close(fd);
     return 1;
@@ -201,14 +201,14 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp, const 
             }
 
             // CHECKING MESSAGE SENT PROPERLY
-            printf("Type = ");
-            if (get_type(draft) == Receive) {
-                printf("Receive\n");
-            } else {
-                printf("ERROR\n");
-            }
-            printf("iden: %s\n", draft + 2);
-            printf("msg: %s\n\n", draft + 2 + 256);
+            // printf("Type = ");
+            // if (get_type(draft) == Receive) {
+            //     printf("Receive\n");
+            // } else {
+            //     printf("ERROR\n");
+            // }
+            // printf("iden: %s\n", draft + 2);
+            // printf("msg: %s\n\n", draft + 2 + 256);
             ////////
             
             close(fd);
@@ -427,25 +427,28 @@ int start_daemon(char * buffer) {
         return 0;
     }
     errno = 0;
-
+    //DEBUG*/printf("Child process started...\n");
 
     // Child process: daemon
+    // printf("@@@@@@@@@ CHILD: %d @@@@@@@@@\n", getpid());
+
+    // Open pipe as FD
+    int fd_dae_WR = open(to_client_fp, O_RDWR);
+    int fd_dae_RD = open(to_daemon_fp, O_RDWR);
+    if (fd_dae_RD < 0 || fd_dae_WR < 0) {
+		perror("Failed to open gevent FD");
+		return 1;
+	}
+    
+    // Reading from client
+	fd_set allfds;
+	int maxfd = fd_dae_RD + 1;
+	struct timeval timeout;
+
     // ========= Monitoring client =========
+    //DEBUG*/printf("Begin monitoring client...\n");
 	while (1)
 	{
-        // Open pipe as FD
-        int fd_dae_WR = open(to_client_fp, O_RDWR);
-        int fd_dae_RD = open(to_daemon_fp, O_RDWR);
-        if (fd_dae_RD < 0 || fd_dae_WR < 0) {
-            perror("Failed to open gevent FD");
-            return 1;
-        }
-        
-        // Reading from client
-        fd_set allfds;
-        int maxfd = fd_dae_RD + 1;
-        struct timeval timeout;
-
 		FD_ZERO(&allfds); //   000000
 		FD_SET(fd_dae_RD, &allfds); // 100000
         
@@ -455,7 +458,7 @@ int start_daemon(char * buffer) {
 		
 		int ret = select(maxfd, &allfds, NULL, NULL, NULL);
 
-        // ========= UPDATE ========
+        // DEBUG*/printf("\n !!!!!!!! UPDATE !!!!!!!! \n");
 		if (-1 == ret) {
 			fprintf(stderr, "Error from select");	
             //@todo: return here
@@ -475,10 +478,10 @@ int start_daemon(char * buffer) {
             }
 
 		}
-        close(fd_dae_WR);
-        close(fd_dae_RD);
 	}
     
+    close(fd_dae_WR);
+    close(fd_dae_RD);
 
     return 1;
 }
