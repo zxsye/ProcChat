@@ -77,7 +77,7 @@ int main() {
     write(wr, msg, 2048);
 
     // RECEIVE
-    sleep(2);
+    sleep(1);
     for (int i = 0; i < sizeof(msg); i++) {
         msg[i] = 0;
     }
@@ -90,6 +90,35 @@ int main() {
     }
     printf("opened sunday_RD\n");
 
+    
+    if (read(rd, msg, sizeof(msg)) < 0) {
+        perror("cannot read");
+    }
+    printf("[ april/sunday receieved ]\n");
+    
+    printf("Type: %d %d\n", msg[0], msg[1]);
+    printf("From: %s\n", msg + 2);
+    printf("Message: %s\n", msg + 2 + 256);
+
+    for (int i = 0; i < sizeof(msg); i++) {
+        printf("%c ", msg[i]);
+    }
+
+    // SAY
+    sleep(1);
+    msg[1] = 0;
+    msg[0] = Saycount;
+    strcpy(msg + 2, "what's up doc?");
+    msg[2047] = -1;
+    write(wr, msg, 2048);
+
+    // RECEIVE
+    sleep(1);
+    for (int i = 0; i < sizeof(msg); i++) {
+        msg[i] = 0;
+    }
+
+    printf("\nClient trying to receive...\n");
     
     if (read(rd, msg, sizeof(msg)) < 0) {
         perror("cannot read");

@@ -114,6 +114,7 @@ int do_recvcont(char * buffer, const char * to_client_fp) {
     //DEBUG*/errno = 0;
 
     if (get_type(buffer) != Recvcont) { 
+        perror("recvcont: Wrong type");
         return -1;
     }
 
