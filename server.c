@@ -501,19 +501,19 @@ int main() {
 		perror("Cannot make fifo");
 	}
 
+    int gevent_fd = open("gevent", O_RDWR);
+    if (gevent_fd < 0) {
+        perror("Failed to open gevent FD");
+        return 1;
+    }
+
+    int maxfd = gevent_fd + 1;
+
+    fd_set allfds;
+    struct timeval timeout;
+
 	while (1)
 	{
-        int gevent_fd = open("gevent", O_RDWR);
-        if (gevent_fd < 0) {
-            perror("Failed to open gevent FD");
-            return 1;
-        }
-
-        int maxfd = gevent_fd + 1;
-
-        fd_set allfds;
-        struct timeval timeout;
-
 		FD_ZERO(&allfds); //   000000
 		FD_SET(gevent_fd, &allfds); // 100000
         
@@ -539,9 +539,9 @@ int main() {
             }
 		}
 
-        close(gevent_fd);
 	}
 
+    close(gevent_fd);
 
     // run_daemon(int fd_RD, int fd_WR);
 	return 0;
