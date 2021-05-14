@@ -94,7 +94,7 @@ int do_receive(char * buffer, const char * to_client_fp) {
     }
     if (write(fd, buffer, 2048) < 0) {
         fprintf(stderr, "do_receive: cannot write()\n\
-                        Target: %s\n", to_client_fp);
+                        ;Target: %s\n", to_client_fp);
         fprintf(stderr, "Identifer: %s\n", buffer + 2);
         fprintf(stderr, "Msg: %s\n", buffer + 2 + 256);
     } else {
@@ -121,6 +121,7 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp, const 
   
     while ((de = readdir(dr)) != NULL) {
         //DEBUG*/printf("\n**** Directory: %s ****\n", de->d_name);
+        fprintf(stderr, "\n**** Directory: %s ****\n", de->d_name);
         
         char * filename = de->d_name;
         long filenm_len = strlen(filename);
