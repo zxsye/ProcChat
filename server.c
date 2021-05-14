@@ -91,6 +91,17 @@ int daemon(int fd_dae_WR, int fd_dae_RD) {
     return 0;
 }
 
+/*  Relays <RECEIVE IDENTIFIER MSG> to client */
+int do_receive(char * buffer, const char * domain, const char * to_client_fp) {
+    if (get_type(buffer) != Receive) {
+        return -1;
+    }
+    
+    int fd = open(to_client_fp, O_WRONLY);
+    write(fd, buffer, sizeof(buffer));
+    return 1;
+}
+
 /*
 Takes in buffer for maximum 2048 characters.
 */
