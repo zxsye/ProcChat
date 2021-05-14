@@ -90,7 +90,7 @@ int do_receive(char * buffer, const char * to_client_fp) {
         return -1;
     }
 
-    int fd = open(to_client_fp, O_RDWR);
+    int fd = open(to_client_fp, O_NONBLOCK | O_RDWR);
     if (fd < 0) {
         fprintf(stderr, "do_receive: cannot open %s\n", to_client_fp);
         return -1;
@@ -131,7 +131,7 @@ int do_recvcont(char * buffer, const char * to_client_fp) {
         fprintf(stderr, "Target: %s\n", to_client_fp);
         fprintf(stderr, "Identifer: %s\n", buffer + 2);
         fprintf(stderr, "Msg: %s\n", buffer + 2 + 256);
-        fprintf(stderr, "Terminate: %d\n", buffer[2048 - 1]);
+        fprintf(stderr, "Terminate: %d\n", (BYTE)buffer[2048 - 1]);
         /* DEBUG */ fprintf(stderr, "From: %s\nMsg: %s\n\n", buffer + 2, buffer + 2 + 256);
     }
     
@@ -180,7 +180,7 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp, const 
 
             //DEBUG*/printf("Writing from: %s :: %s\n", to_daemon_fp, pipepath);
             // Writing now
-            int fd = open(pipepath, O_RDWR);
+            int fd = open(pipepath, O_NONBLOCK | O_RDWR);
             if (fd < 0) {
                 perror("do_say: Error in piping message to other clients");
                 return -1;
@@ -222,10 +222,10 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp, const 
 /*
 Takes in buffer for maximum 2048 characters.
 */
-int do_saycount(char * buffer, const char * domain, const char * to_daemon_fp, const char * to_client_fp) {
+int do_saycount(char * msg, const char * domain, const char * to_daemon_fp, const char * to_client_fp) {
 
     fprintf(stderr, "\ndo_saycount:\n");
-    if (get_type(buffer) != Saycount) {
+    if (get_type(msg) != Saycount) {
         fprintf(stderr, "Failed do_saycount:\n");
         return -1;
     }
@@ -267,7 +267,7 @@ int do_saycount(char * buffer, const char * domain, const char * to_daemon_fp, c
 
             //DEBUG*/printf("Writing from: %s :: %s\n", to_daemon_fp, pipepath);
             // Writing now
-            int fd = open(pipepath, O_RDWR);
+            int fd = open(pipepath, O_WRONLY);
             if (fd < 0) {
                 perror("do_say: Error in piping message to other clients");
                 return -1;
@@ -280,18 +280,19 @@ int do_saycount(char * buffer, const char * domain, const char * to_daemon_fp, c
             const char * identity = FILEPATH_TO_IDEN(to_client_fp, domain);
             strncpy(draft + 2, identity, strlen(identity) - 3); // To remove _RD
             draft[2 + strlen(identity) - 3] = '\0';
-            strcpy(draft + 2 + 256, SAY_MSG_INDEX(buffer));
+            strcpy(draft + 2 + 256, SAY_MSG_INDEX(msg));
+            // strcpy(draft + 2 + 256, "poop");
 
-            draft[BUF_SIZE - 1] = buffer[BUF_SIZE - 1];
+            draft[BUF_SIZE - 1] = msg[BUF_SIZE - 1];
             // Write to other clients
             if (write(fd, draft, 2048) < -1) {
                 perror("Failed writing");
             }
 
-            fprintf(stderr, "Target: %s\n", to_client_fp);
+            fprintf(stderr, "Target: %s\n", pipepath);
             fprintf(stderr, "Identifer: %s\n", draft + 2);
             fprintf(stderr, "Msg: %s\n", draft + 2 + 256);
-            fprintf(stderr, "Terminate: %d\n\n", draft[2048 - 1]);
+            fprintf(stderr, "Terminate: %d\n", (BYTE)draft[2048 - 1]);
 
             // for (int i = 0; i < 2048; i++) {
             //     fprintf(stderr, "%c", buffer[i]);
@@ -309,7 +310,7 @@ int do_saycount(char * buffer, const char * domain, const char * to_daemon_fp, c
 
 
 */
-int handle_daemon_update(int fd_dae_RD, int fd_dae_WR, 
+int handle_daemon_update(int fd_dae_RD,
                           const char * to_client_fp, const char * to_daemon_fp,
                           const char * domain)
 {
@@ -439,8 +440,8 @@ int start_daemon(int gevent_fd) {
     close(gevent_fd);
 
     // Open pipe as FD
-    int fd_dae_WR = open(to_client_fp, O_RDWR);
-    int fd_dae_RD = open(to_daemon_fp, O_RDWR);
+    int fd_dae_WR = open(to_client_fp, O_NONBLOCK | O_RDWR);
+    int fd_dae_RD = open(to_daemon_fp, O_NONBLOCK | O_RDWR);
     if (fd_dae_RD < 0 || fd_dae_WR < 0) {
 		perror("Failed to open gevent FD");
 		return 1;
@@ -475,7 +476,7 @@ int start_daemon(int gevent_fd) {
 			// Start reading from clients
             //DEBUG*/printf("Handling message...\n");
 
-            int succ = handle_daemon_update(fd_dae_RD, fd_dae_WR,
+            int succ = handle_daemon_update(fd_dae_RD,
                                             to_client_fp, to_daemon_fp,
                                             domain_str);
 
@@ -492,6 +493,8 @@ int start_daemon(int gevent_fd) {
     return 1;
 }
 
+/* Gevent monitor
+*/
 int main() {
     // printf("hello");
 	if ((mkfifo("gevent", 0777) < 0)) {
