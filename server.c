@@ -221,6 +221,13 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp, const 
 Takes in buffer for maximum 2048 characters.
 */
 int do_saycount(char * buffer, const char * domain, const char * to_daemon_fp, const char * to_client_fp) {
+
+    fprintf(stderr, "\ndo_saycount:\n");
+    if (get_type(buffer) != Saycount) {
+        fprintf(stderr, "Failed do_saycount:\n");
+        return -1;
+    }
+
     // Find all other client handlers in current domain
     struct dirent *de;              // Pointer for directory entry
     DIR *dr = opendir(domain);      // opendir() returns a pointer of DIR type. 
