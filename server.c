@@ -101,8 +101,8 @@ int do_receive(char * buffer, const char * to_client_fp) {
         fprintf(stderr, "Identifer: %s\n", buffer + 2);
         fprintf(stderr, "Msg: %s\n\n", buffer + 2 + 256);
     } else {
-        // DEBUG */ printf("wrote to client\n");
-        // DEBUG */ printf("From: %s\nMsg: %s\n", buffer + 2, buffer + 2 + 256);
+        /* DEBUG */ printf("wrote to client\n");
+        /* DEBUG */ printf("From: %s\nMsg: %s\n", buffer + 2, buffer + 2 + 256);
     }
     close(fd);
     return 1;
@@ -201,14 +201,14 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp, const 
             }
 
             // CHECKING MESSAGE SENT PROPERLY
-            // printf("Type = ");
-            // if (get_type(draft) == Receive) {
-            //     printf("Receive\n");
-            // } else {
-            //     printf("ERROR\n");
-            // }
-            // printf("iden: %s\n", draft + 2);
-            // printf("msg: %s\n\n", draft + 2 + 256);
+            printf("Type = ");
+            if (get_type(draft) == Receive) {
+                printf("Receive\n");
+            } else {
+                printf("ERROR\n");
+            }
+            printf("iden: %s\n", draft + 2);
+            printf("msg: %s\n\n", draft + 2 + 256);
             ////////
             
             close(fd);
