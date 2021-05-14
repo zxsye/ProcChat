@@ -50,12 +50,15 @@ enum type get_type(char * string) {
     if (string[0] == 0) {
         BYTE ret = string[1];
         return ret;
+    } else if (string[1] == 0) {
+        BYTE ret = string[0];
+        return ret;
     }
     return -1;
 }
 
 void set_type(char * string, enum type t) {
-    string[0] = 0;
+    string[0] = t;
     string[1] = t;
 }
 
