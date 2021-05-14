@@ -78,6 +78,7 @@ char * get_domain(char * string) {
 
 /*  Relays <RECEIVE IDENTIFIER MSG> to client */
 int do_receive(char * buffer, const char * to_client_fp) {
+    perror("Doing receive");
     if (get_type(buffer) != Receive) {
         return -1;
     }
