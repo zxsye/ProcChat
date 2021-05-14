@@ -281,12 +281,12 @@ int start_daemon(int gevent_fd) {
     // printf("%s\n", to_client_fp);
     // printf("%s\n", to_daemon_fp);
     // @TODO: overwrite existing pipe if needed
-    if ( mkfifo(to_client_fp, 0777) == -1 ) {
+    if ( mkfifo(to_client_fp, S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH) == -1 ) {
         // perror("Cannot make pipe to client");
         errno = 0;
         return -1;
     }
-    if ( mkfifo(to_daemon_fp, 0777) == -1 ) {
+    if ( mkfifo(to_daemon_fp, S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH) == -1 ) {
         // perror("Cannot make pipe to daemon");
         errno = 0;
         return -1;
@@ -366,7 +366,7 @@ int start_daemon(int gevent_fd) {
 
 int main() {
     // printf("hello");
-	if ((mkfifo("gevent", 0777) < 0)) {
+	if ((mkfifo("gevent", S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH) < 0)) {
 		perror("Cannot make fifo");
 	}
 
