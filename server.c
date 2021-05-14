@@ -189,6 +189,76 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp, const 
 }
 
 /*
+Takes in buffer for maximum 2048 characters.
+*/
+int do_saycount(char * buffer, const char * domain, const char * to_daemon_fp, const char * to_client_fp) {
+    // Find all other client handlers in current domain
+    struct dirent *de;              // Pointer for directory entry
+    DIR *dr = opendir(domain);      // opendir() returns a pointer of DIR type. 
+  
+    if (dr == NULL) { // opendir returns NULL if couldn't open directory
+        perror("do_say: Could not open current directory" );
+        return -1;
+    }
+  
+    while ((de = readdir(dr)) != NULL) {
+        //DEBUG*/printf("\n**** Directory: %s ****\n", de->d_name);
+        //DEBUG*/fprintf(stderr, "\n**** Directory: %s ****\n", de->d_name);
+        
+        char * filename = de->d_name;
+        long filenm_len = strlen(filename);
+        if (strlen(filename) <= 2) {
+            //DEBUG*/perror("Filename too short");
+            continue;
+        }
+        
+        // Directly write to client RD
+        if (filename[filenm_len - 2] == 'W' && filename[filenm_len - 1] == 'R') {
+
+            char pipepath[BUF_SIZE];
+            strcpy(pipepath, domain);
+            strcat(pipepath, "/");
+            strcat(pipepath, filename);
+
+            // Skip write pipes to own client
+            
+            if (strcmp(pipepath, to_daemon_fp) == 0) {  
+                //DEBUG*/printf("# Cannot write to self\n");
+                continue;
+            }
+
+            //DEBUG*/printf("Writing from: %s :: %s\n", to_daemon_fp, pipepath);
+            // Writing now
+            int fd = open(pipepath, O_RDWR);
+            if (fd < 0) {
+                perror("do_say: Error in piping message to other clients");
+                return -1;
+            }
+
+            // Build RECEIVE message: RECEIVE <identifier> <message>
+            char draft[BUF_SIZE] = {0};
+            set_type(draft, Receive);
+
+            const char * identity = FILEPATH_TO_IDEN(to_client_fp, domain);
+            strncpy(draft + 2, identity, strlen(identity) - 3); // To remove _RD
+            draft[2 + strlen(identity) - 3] = '\0';
+            strcpy(draft + 2 + 256, SAY_MSG_INDEX(buffer));
+
+            draft[BUF_SIZE - 1] = buffer[BUF_SIZE - 1];
+            // Write to other clients
+            if (write(fd, draft, 2048) < -1) {
+                perror("Failed writing");
+            }
+            
+            close(fd);
+        }
+    }
+    //DEBUG*/printf("Finished reading directory\n");
+    closedir(dr);
+    return 0;
+}
+
+/*
 
 
 */
@@ -216,7 +286,7 @@ int handle_daemon_update(int fd_dae_RD, int fd_dae_WR,
         }
 
     } else if ( get_type(buffer) == Saycount) {
-        int st = do_say(buffer, domain, to_daemon_fp, to_client_fp); // write to other daemons
+        int st = do_saycount(buffer, domain, to_daemon_fp, to_client_fp); // write to other daemons
 
         if (st == -1) {
             perror("Failed do_say");
