@@ -325,7 +325,7 @@ int handle_daemon_update(int fd_dae_RD, int fd_dae_WR,
         do_receive(buffer, to_client_fp);
         
     } else if ( get_type(buffer) == Recvcont) {
-        do_receive(buffer, to_client_fp);
+        do_recvcont(buffer, to_client_fp);
     }
     return 0;
 }
