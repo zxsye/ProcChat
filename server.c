@@ -290,7 +290,7 @@ int do_saycount(char * buffer, const char * domain, const char * to_daemon_fp, c
             fprintf(stderr, "Identifer: %s\n", draft + 2);
             fprintf(stderr, "Msg: %s\n", draft + 2 + 256);
             fprintf(stderr, "Terminate: %d\n\n", buffer[2048 - 1]);
-            for (int i = 0; i < sizeof(buffer); i++) {
+            for (int i = 0; i < 2048; i++) {
                 fprintf(stderr, "%c", buffer[i]);
             }
             
