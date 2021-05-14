@@ -89,7 +89,7 @@ int do_receive(char * buffer, const char * to_client_fp) {
         return -1;
     }
 
-    int fd = open(to_client_fp, O_WRONLY);
+    int fd = open(to_client_fp, O_RDWR);
     if (fd < 0) {
         fprintf(stderr, "do_receive: cannot open %s\n", to_client_fp);
         return -1;
@@ -149,7 +149,7 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp, const 
 
             //DEBUG*/printf("Writing from: %s :: %s\n", to_daemon_fp, pipepath);
             // Writing now
-            int fd = open(pipepath, O_WRONLY);
+            int fd = open(pipepath, O_RDWR);
             if (fd < 0) {
                 perror("do_say: Error in piping message to other clients");
                 return -1;
@@ -281,12 +281,12 @@ int start_daemon(int gevent_fd) {
     // printf("%s\n", to_client_fp);
     // printf("%s\n", to_daemon_fp);
     // @TODO: overwrite existing pipe if needed
-    if ( mkfifo(to_client_fp, S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH) == -1 ) {
+    if ( mkfifo(to_client_fp, 0777) == -1 ) {
         // perror("Cannot make pipe to client");
         errno = 0;
         return -1;
     }
-    if ( mkfifo(to_daemon_fp, S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH) == -1 ) {
+    if ( mkfifo(to_daemon_fp, 0777) == -1 ) {
         // perror("Cannot make pipe to daemon");
         errno = 0;
         return -1;
@@ -313,8 +313,8 @@ int start_daemon(int gevent_fd) {
     close(gevent_fd);
 
     // Open pipe as FD
-    int fd_dae_WR = open(to_client_fp, O_WRONLY);
-    int fd_dae_RD = open(to_daemon_fp, O_RDONLY);
+    int fd_dae_WR = open(to_client_fp, O_RDWR);
+    int fd_dae_RD = open(to_daemon_fp, O_RDWR);
     if (fd_dae_RD < 0 || fd_dae_WR < 0) {
 		perror("Failed to open gevent FD");
 		return 1;
@@ -366,11 +366,11 @@ int start_daemon(int gevent_fd) {
 
 int main() {
     // printf("hello");
-	if ((mkfifo("gevent", S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH) < 0)) {
+	if ((mkfifo("gevent", 0777) < 0)) {
 		perror("Cannot make fifo");
 	}
 
-	int gevent_fd = open("gevent", O_RDONLY);
+	int gevent_fd = open("gevent", O_RDWR);
 	if (gevent_fd < 0) {
 		perror("Failed to open gevent FD");
 		return 1;
