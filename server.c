@@ -339,6 +339,7 @@ int start_daemon(char * buffer) {
     pline.iden = identifer;
     pline.to_client_fp = to_client_fp;
     pline.to_daemon_fp = to_daemon_fp;
+    pline = pline;
 
     // Starting FIFO
     if ( mkfifo(to_client_fp, 0777) == -1 ) {
