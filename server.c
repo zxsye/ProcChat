@@ -357,10 +357,6 @@ Takes in fd for gevent, reads latest message from pipe to construct new pipes fo
 
 */
 int start_daemon(char * buffer) {
-    
-
-    // printf("%s\n", buffer);
-    // return 1;
 
     if (get_type(buffer) != Connect) {
         printf("Type is not connect\n");
@@ -374,7 +370,6 @@ int start_daemon(char * buffer) {
     // Make domain directory
     if ( -1 == mkdir(domain_str, 0777) ) {
         if (errno == EEXIST) {
-            // Domain exists
             errno = 0;
         } else {
             printf("Domain cannot be created\n");
@@ -396,27 +391,23 @@ int start_daemon(char * buffer) {
     strcat(to_client_fp, "_RD");                        // domain/identifier_RD
     
     // Starting FIFO
-    // printf("%s\n", to_client_fp);
-    // printf("%s\n", to_daemon_fp);
-    // @TODO: overwrite existing pipe if needed
     if ( mkfifo(to_client_fp, 0777) == -1 ) {
-        // perror("Cannot make pipe to client");
+        perror("Cannot make pipe to client");
         errno = 0;
         return -1;
     }
     if ( mkfifo(to_daemon_fp, 0777) == -1 ) {
-        // perror("Cannot make pipe to daemon");
+        perror("Cannot make pipe to daemon");
         errno = 0;
         return -1;
     }
 
-    //DEBUG*/fprintf(stderr, "Created pipe: %s\n", to_client_fp);
-    // ========== FORKING ========== //
 
     // Open pipe as FD
-    int fd_dae_WR = open(to_client_fp, O_RDWR);
     int fd_dae_RD = open(to_daemon_fp, O_RDWR);
-    if (fd_dae_RD < 0 || fd_dae_WR < 0) {
+    // int fd_dae_WR = open(to_client_fp, O_RDWR);
+    // if (fd_dae_RD < 0 || fd_dae_WR < 0) {
+    if (fd_dae_RD < 0) {
 		perror("Failed to open FIFO to/from client");
 		return 1;
 	}
@@ -427,7 +418,6 @@ int start_daemon(char * buffer) {
 	struct timeval timeout;
 
     // ========= Monitoring client =========
-    //DEBUG*/printf("Begin monitoring client...\n");
 	while (1)
 	{
 		FD_ZERO(&allfds); //   000000
@@ -461,7 +451,7 @@ int start_daemon(char * buffer) {
 		}
 	}
     
-    close(fd_dae_WR);
+    // close(fd_dae_WR);
     close(fd_dae_RD);
 
     return 1;
