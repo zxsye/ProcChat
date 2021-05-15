@@ -61,9 +61,9 @@ typedef struct pipeline {
 } Pipeline;
 
 // Return pointer to first character of "identifier"
-char * get_identifier(char * string) {
+char * get_iden(char * string) {
     // Only 256 characters !
-    return &string[IDEN_IX];
+    return string + IDEN_IX;
 }
 
 // Return pointer to first character of the "domain"
@@ -317,18 +317,29 @@ int start_daemon(char * buffer) {
     }
 
     // File path to FIFO
+    char domain[256];
+    char identifer[256];
+    strncpy(domain, get_domain(buffer), DOMAIN_LEN);
+    strncpy(domain, get_iden(buffer), IDEN_LEN);
+    printf("%s, %s\n", domain, identifer);
+
     char to_client_fp[BUF_SIZE];
     char to_daemon_fp[BUF_SIZE];
-
-    strncpy(to_client_fp, get_domain(buffer), 256);           // domain
+    strcpy(to_client_fp, domain);           // domain
     strcat(to_client_fp, "/");                          // domain/
+    strcat(to_client_fp, identifer);          // domain/identifier
 
-    strcat(to_client_fp, get_identifier(buffer));          // domain/identifier
     strcpy(to_daemon_fp, to_client_fp);                 // domain/identifier
 
     strcat(to_daemon_fp, "_WR");                        // domain/identifier_WR
     strcat(to_client_fp, "_RD");                        // domain/identifier_RD
     
+    Pipeline pline;
+    pline.domain = domain;
+    pline.iden = identifer;
+    pline.to_client_fp = to_client_fp;
+    pline.to_daemon_fp = to_daemon_fp;
+
     // Starting FIFO
     if ( mkfifo(to_client_fp, 0777) == -1 ) {
         perror("Cannot make pipe to client");
