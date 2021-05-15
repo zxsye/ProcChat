@@ -289,7 +289,7 @@ int handle_update(char * buffer, Pipeline * pline) {
         if ( -1 == do_recvcont(buffer, pline) ) {
             perror("Failed do_recvcont");
         }
-    } else if ( get_type(buffer) == Disconnect {
+    } else if ( get_type(buffer) == Disconnect) {
         return 1;
     } else {
         fprintf(stderr, "Not implemented type");
