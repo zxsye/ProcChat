@@ -136,7 +136,6 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp, const 
         char * filename = de->d_name;
         long filenm_len = strlen(filename);
         if (strlen(filename) <= 2) {
-            perror("Filename too short");
             continue;
         }
         
@@ -386,7 +385,6 @@ int start_daemon(char * buffer) {
             int succ = handle_daemon_update(buffer,
                                             to_client_fp, to_daemon_fp,
                                             domain_str);
-
             if (succ == -1) {
                 return -1; //@TODO: change to something else
             }
