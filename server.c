@@ -101,7 +101,7 @@ int do_receive(char * buffer, const char * to_client_fp) {
         fprintf(stderr, "Identifer: %s\n", buffer + 2);
         fprintf(stderr, "Msg: %s\n\n", buffer + 2 + 256);
     }
-    
+
     close(fd);
     return 1;
 }
@@ -414,9 +414,9 @@ int start_daemon(char * buffer) {
     // ========== FORKING ========== //
 
     // Open pipe as FD
-    // int fd_dae_WR = open(to_client_fp, O_RDWR);
+    int fd_dae_WR = open(to_client_fp, O_RDWR);
     int fd_dae_RD = open(to_daemon_fp, O_RDONLY);
-    if (fd_dae_RD < 0) {
+    if (fd_dae_RD < 0 || fd_dae_WR) {
 		perror("Failed to open FIFO to/from client");
 		return 1;
 	}
@@ -461,6 +461,7 @@ int start_daemon(char * buffer) {
 		}
 	}
     
+    close(fd_dae_WR);
     close(fd_dae_RD);
 
     return 1;
