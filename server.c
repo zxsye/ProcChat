@@ -1,5 +1,3 @@
-
-
 #include "server.h"
 #include <stdint.h>
 #include <stdio.h> 
@@ -47,16 +45,7 @@ enum type {
 };
 
 enum type get_type(char * string) {
-    // if (string[0] == 0) {
-    //     BYTE ret = string[1];
-    //     return ret;
-    // }
     return *(short*)string;
-    if (string[1] == 0) {
-        BYTE ret = string[0];
-        return ret;
-    }
-    return -1;
 }
 
 void set_type(char * string, enum type t) {
@@ -65,8 +54,10 @@ void set_type(char * string, enum type t) {
 }
 
 typedef struct pipeline {
-    int to_client_fp;
-    int to_daemon_fp;
+    char * domain;
+    char * iden;
+    char * to_client_fp;
+    char * to_daemon_fp;
 } Pipeline;
 
 // Return pointer to first character of "identifier"
@@ -108,8 +99,6 @@ int do_receive(char * buffer, const char * to_client_fp) {
 
 /*  Relays <RECEIVE IDENTIFIER MSG> to client */
 int do_recvcont(char * buffer, const char * to_client_fp) {
-    // /*DEBUG*/perror("\n===== doing recvcont =====");
-
     if (get_type(buffer) != Recvcont) { 
         return -1;
     }
@@ -119,17 +108,12 @@ int do_recvcont(char * buffer, const char * to_client_fp) {
         fprintf(stderr, "do_receive: cannot open %s\n", to_client_fp);
         return -1;
     }
+
     if (write(fd, buffer, 2048) < 0) {
         fprintf(stderr, "do_receive: cannot write()\n");
     }
     close(fd);
-    // /* DEBUG */ fprintf(stderr, "YAY wrote to client\n");
-    // fprintf(stderr, "Target: %s\n", to_client_fp);
-    // fprintf(stderr, "Identifer: %s\n", buffer + 2);
-    // fprintf(stderr, "Msg: %s\n", buffer + 2 + 256);
-    // fprintf(stderr, "Terminate: %d\n", (BYTE)buffer[2048 - 1]);
-    // /* DEBUG */ fprintf(stderr, "From: %s\nMsg: %s\n\n", buffer + 2, buffer + 2 + 256);
-    
+
     return 0;
 }
 
@@ -148,13 +132,11 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp, const 
     }
   
     while ((de = readdir(dr)) != NULL) {
-        //DEBUG*/printf("\n**** Directory: %s ****\n", de->d_name);
-        //DEBUG*/fprintf(stderr, "\n**** Directory: %s ****\n", de->d_name);
         
         char * filename = de->d_name;
         long filenm_len = strlen(filename);
         if (strlen(filename) <= 2) {
-            //DEBUG*/perror("Filename too short");
+            perror("Filename too short");
             continue;
         }
         
@@ -167,14 +149,7 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp, const 
             strcat(pipepath, filename);
 
             // Skip write pipes to own client
-            
-            if (strcmp(pipepath, to_daemon_fp) == 0) {  
-                //DEBUG*/printf("# Cannot write to self\n");
-                continue;
-            }
-
-            //DEBUG*/printf("Writing from: %s :: %s\n", to_daemon_fp, pipepath);
-            // Writing now
+            if ( strcmp(pipepath, to_daemon_fp) == 0 ) continue;
 
             // Build RECEIVE message: RECEIVE <identifier> <message>
             char draft[BUF_SIZE] = {0};
@@ -195,21 +170,10 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp, const 
                 perror("Failed writing");
             }
             close(fd);
-
-            // CHECKING MESSAGE SENT PROPERLY
-            // printf("Type = ");
-            // if (get_type(draft) == Receive) {
-            //     printf("Receive\n");
-            // } else {
-            //     printf("ERROR\n");
-            // }
-            // printf("iden: %s\n", draft + 2);
-            // printf("msg: %s\n\n", draft + 2 + 256);
-            ////////
             
         }
     }
-    //DEBUG*/printf("Finished reading directory\n");
+
     closedir(dr);
     return 0;
 }
@@ -219,7 +183,7 @@ Takes in buffer for maximum 2048 characters.
 */
 int do_saycount(char * msg, const char * domain, const char * to_daemon_fp, const char * to_client_fp) {
 
-    // fprintf(stderr, "\n====== do_saycount ======\n");
+
     if (get_type(msg) != Saycount) {
         fprintf(stderr, "Failed do_saycount:\n");
         return -1;
@@ -235,13 +199,9 @@ int do_saycount(char * msg, const char * domain, const char * to_daemon_fp, cons
     }
   
     while ((de = readdir(dr)) != NULL) {
-        //DEBUG*/printf("\n**** Directory: %s ****\n", de->d_name);
-        //DEBUG*/fprintf(stderr, "\n**** Directory: %s ****\n", de->d_name);
-        
         char * filename = de->d_name;
         long filenm_len = strlen(filename);
         if (strlen(filename) <= 2) {
-            //DEBUG*/perror("Filename too short");
             continue;
         }
         
@@ -256,7 +216,6 @@ int do_saycount(char * msg, const char * domain, const char * to_daemon_fp, cons
             // Skip write pipes to own client
             
             if (strcmp(pipepath, to_daemon_fp) == 0) {  
-                //DEBUG*/printf("# Cannot write to self\n");
                 continue;
             }
 
@@ -282,11 +241,6 @@ int do_saycount(char * msg, const char * domain, const char * to_daemon_fp, cons
             }
             close(fd);
 
-            // fprintf(stderr, "Target: %s\n", pipepath);
-            // fprintf(stderr, "Identifer: %s\n", draft + 2);
-            // fprintf(stderr, "Msg: %s\n", draft + 2 + 256);
-            // fprintf(stderr, "Terminate: %d\n", (BYTE)draft[2048 - 1]);
-            
         }
     }
     //DEBUG*/printf("Finished reading directory\n");
@@ -298,22 +252,14 @@ int do_saycount(char * msg, const char * domain, const char * to_daemon_fp, cons
 
 
 */
-int handle_daemon_update(int fd_dae_RD,
+int handle_daemon_update(char * buffer,
                           const char * to_client_fp, const char * to_daemon_fp,
                           const char * domain)
 {
-    // printf("@@@@@@@@@ %d @@@@@@@@@\n", getpid());
-    char buffer[BUF_SIZE];
-    int nread = read(fd_dae_RD, buffer, BUF_SIZE);
-    if (nread == -1) {
-        printf("Failed to read\n");
-        return -1;
-    }
+    
     
     // Check message type
     if ( get_type(buffer) == Say) {
-        // DEBUG*/printf("\n==== doing say ====\n");
-        
         int st = do_say(buffer, domain, to_daemon_fp, to_client_fp); // write to other daemons
 
         if (st == -1) {
@@ -403,8 +349,6 @@ int start_daemon(char * buffer) {
 	while (1)
 	{
         int fd_dae_RD = open(to_daemon_fp, O_RDWR);
-        // int fd_dae_WR = open(to_client_fp, O_RDWR);
-        // if (fd_dae_RD < 0 || fd_dae_WR < 0) {
         if (fd_dae_RD < 0) {
             perror("Failed to open FIFO to/from client");
             return 1;
@@ -424,18 +368,22 @@ int start_daemon(char * buffer) {
 		
 		int ret = select(maxfd, &allfds, NULL, NULL, NULL);
 
-        // DEBUG*/printf("\n !!!!!!!! UPDATE !!!!!!!! \n");
+        // ======= NEW UPDATE =======
 		if (-1 == ret) {
 			fprintf(stderr, "Error from select");	
-            //@todo: return here
 		} else if (0 == ret) {
 			perror("Client said nothing...");
 
 		} else if (FD_ISSET(fd_dae_RD, &allfds)) {
-			// Start reading from clients
-            //DEBUG*/printf("Handling message...\n");
 
-            int succ = handle_daemon_update(fd_dae_RD,
+            char buffer[BUF_SIZE];
+            int nread = read(fd_dae_RD, buffer, BUF_SIZE);
+            if (nread == -1) {
+                printf("Failed to read\n");
+                return -1;
+            }
+
+            int succ = handle_daemon_update(buffer,
                                             to_client_fp, to_daemon_fp,
                                             domain_str);
 
