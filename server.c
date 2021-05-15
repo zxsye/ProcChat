@@ -414,22 +414,6 @@ int start_daemon(char * buffer) {
 
     //DEBUG*/fprintf(stderr, "Created pipe: %s\n", to_client_fp);
     // ========== FORKING ========== //
-    pid_t pid = fork();
-    if (pid < 0) {
-        printf("Could not fork\n");
-        return -1;
-    }
-
-    // Tell parent success
-    if (pid != 0) {
-        // printf("@@@@@@@@@ PARENT: %d @@@@@@@@@\n", getpid());
-        return 0;
-    }
-    errno = 0;
-    //DEBUG*/printf("Child process started...\n");
-
-    // Child process: daemon
-    // printf("@@@@@@@@@ CHILD: %d @@@@@@@@@\n", getpid());
 
     // Open pipe as FD
     int fd_dae_WR = open(to_client_fp, O_RDWR); 
@@ -532,13 +516,21 @@ int main() {
                 printf("Failed to read\n");
                 return -1;
             }
+            pid_t pid = fork();
+            if (pid < 0) {
+                printf("Could not fork\n");
+                return -1;
+            }
 
-            int dae = start_daemon(buffer);
-            if (dae == 0) // child successfully created
+            // Parent continues
+            if (pid != 0) {
                 continue;
-            else if (dae == 1) {
-                // gevent already closed
-                return 0;
+            } else {
+            // Child starts daemon
+                int dae = start_daemon(buffer);
+                if (dae == 1) {
+                    break;
+                }
             }
 		}
 
