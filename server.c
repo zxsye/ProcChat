@@ -316,8 +316,8 @@ int start_daemon(char * buffer) {
     // File path to FIFO
     char domain[256];
     char identifer[256];
-    strncpy(domain, get_domain(buffer), DOMAIN_LEN);
-    strncpy(domain, get_iden(buffer), IDEN_LEN);
+    strcpy(domain, get_domain(buffer));
+    strcpy(domain, get_iden(buffer));
     printf("%s, %s\n", domain, identifer);
 
     char to_client_fp[BUF_SIZE];
