@@ -440,7 +440,7 @@ int start_daemon(char * buffer) {
          */
     int fd_dae_RD = open(to_daemon_fp, O_RDWR);
     if (fd_dae_RD < 0 || fd_dae_WR < 0) {
-		perror("Failed to open gevent FD");
+		perror("Failed to open FIFO to/from client");
 		return 1;
 	}
     
