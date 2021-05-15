@@ -238,8 +238,8 @@ int do_saycount(char * msg, Pipeline * pline) {
 
         }
     }
-    //DEBUG*/printf("Finished reading directory\n");
     closedir(dr);
+
     return 0;
 }
 
@@ -248,31 +248,26 @@ int do_saycount(char * msg, Pipeline * pline) {
 
 */
 int handle_daemon_update(char * buffer, Pipeline * pline) {
-    
-    
     // Check message type
-    if ( get_type(buffer) == Say) {
-        int st = do_say(buffer, pline); // write to other daemons
-
-        if (st == -1) {
+    if (get_type(buffer) == Say) {
+        if ( -1 == do_say(buffer, pline) ) {
             perror("Failed do_say");
             return -1;
         }
-
-    } else if ( get_type(buffer) == Saycount) {
-        int st = do_saycount(buffer, pline); // write to other daemons
-
-        if (st == -1) {
+    } else if (get_type(buffer) == Saycount) {
+        if ( -1 == do_saycount(buffer, pline) ) {
             perror("Failed do_say");
             return -1;
         }
     } else if ( get_type(buffer) == Receive) {
-        // DEBUG */ printf("\n===== doing receive ====\n");
-        do_receive(buffer, pline);
-        
+        if ( -1 == do_receive(buffer, pline) ) {
+            perror("Failed to do_receive");
+            return -1;
+        }
     } else if ( get_type(buffer) == Recvcont) {
-        do_recvcont(buffer, pline);
-
+        if ( -1 == do_recvcont(buffer, pline) ) {
+            perror("Failed do_recvcont");
+        }
     } else {
         fprintf(stderr, "Not implemented type");
     }
@@ -296,11 +291,11 @@ int start_daemon(char * buffer) {
     }
 
     // Make domain
-    char domain_str[BUF_SIZE];
-    strncpy(domain_str, get_domain(buffer), DOMAIN_LEN);  // domain is maximum 255
+    char domain[DOMAIN_LEN];
+    strncpy(domain, get_domain(buffer), DOMAIN_LEN);  // domain is maximum 255
 
     // Make domain directory
-    if ( -1 == mkdir(domain_str, 0777) ) {
+    if ( -1 == mkdir(domain, 0777) ) {
         if (errno == EEXIST) {
             errno = 0;
         } else {
@@ -310,17 +305,15 @@ int start_daemon(char * buffer) {
     }
 
     // File path to FIFO
-    char domain[256];
-    char iden[256];
-    strncpy(domain, get_domain(buffer), DOMAIN_LEN);  // domain is maximum 255
+    char iden[IDEN_LEN];
     strcpy(iden, get_iden(buffer));
     fprintf(stderr, "%s, %s\n", domain, iden);
 
     char to_client_fp[BUF_SIZE];
     char to_daemon_fp[BUF_SIZE];
-    strcpy(to_client_fp, domain);           // domain
+    strcpy(to_client_fp, domain);                       // domain
     strcat(to_client_fp, "/");                          // domain/
-    strcat(to_client_fp, iden);          // domain/identifier
+    strcat(to_client_fp, iden);                         // domain/identifier
 
     strcpy(to_daemon_fp, to_client_fp);                 // domain/identifier
 
@@ -333,11 +326,6 @@ int start_daemon(char * buffer) {
     pline.to_client_fp = to_client_fp;
     pline.to_daemon_fp = to_daemon_fp;
 
-    fprintf(stderr, "%s\n", pline.domain);
-    fprintf(stderr, "%s\n", pline.iden);
-    fprintf(stderr, "%s\n", pline.to_client_fp);
-    fprintf(stderr, "%s\n", pline.to_daemon_fp);
-
     // Starting FIFO
     if ( mkfifo(to_client_fp, 0777) == -1 ) {
         perror("Cannot make pipe to client");
@@ -349,9 +337,6 @@ int start_daemon(char * buffer) {
         errno = 0;
         return -1;
     }
-
-
-    // Open pipe as FD
 
     // ========= Monitoring client =========
 	while (1)
@@ -393,7 +378,7 @@ int start_daemon(char * buffer) {
 
             int succ = handle_daemon_update(buffer, &pline);
             if (succ == -1) {
-                return -1; //@TODO: change to something else
+                return -1;
             }
 
 		}
