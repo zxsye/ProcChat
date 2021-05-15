@@ -307,7 +307,6 @@ int start_daemon(char * buffer) {
     // File path to FIFO
     char iden[IDEN_LEN];
     strcpy(iden, get_iden(buffer));
-    fprintf(stderr, "%s, %s\n", domain, iden);
 
     char to_client_fp[BUF_SIZE];
     char to_daemon_fp[BUF_SIZE];
