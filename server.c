@@ -385,12 +385,12 @@ int run_daemon(char * buffer) {
                 return -1;
             } else if (st == Disconnect) {
                 close(fd_dae_RD);
-                if (unlink(to_daemon_fp) == 0) {
-                    printf("FIFO deleted.\n");
-                }
-                if (unlink(to_client_fp) == 0) {
-                    perror("to_client_fp FIFO closed");
-                }
+                // if (unlink(to_daemon_fp) == 0) {
+                //     printf("FIFO deleted.\n");
+                // }
+                // if (unlink(to_client_fp) == 0) {
+                //     perror("to_client_fp FIFO closed");
+                // }
                 return Disconnect;
             }
 
