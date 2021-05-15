@@ -315,16 +315,16 @@ int start_daemon(char * buffer) {
 
     // File path to FIFO
     char domain[256];
-    char identifer[256];
-    strcpy(domain, get_domain(buffer));
-    strcpy(domain, get_iden(buffer));
-    fprintf(stderr, "%s, %s\n", domain, identifer);
+    char iden[256];
+    strncpy(domain, get_domain(buffer), DOMAIN_LEN);  // domain is maximum 255
+    strcpy(iden, get_iden(buffer));
+    fprintf(stderr, "%s, %s\n", domain, iden);
 
     char to_client_fp[BUF_SIZE];
     char to_daemon_fp[BUF_SIZE];
     strcpy(to_client_fp, domain);           // domain
     strcat(to_client_fp, "/");                          // domain/
-    strcat(to_client_fp, identifer);          // domain/identifier
+    strcat(to_client_fp, iden);          // domain/identifier
 
     strcpy(to_daemon_fp, to_client_fp);                 // domain/identifier
 
@@ -333,7 +333,7 @@ int start_daemon(char * buffer) {
     
     Pipeline pline;
     pline.domain = domain;
-    pline.iden = identifer;
+    pline.iden = iden;
     pline.to_client_fp = to_client_fp;
     pline.to_daemon_fp = to_daemon_fp;
     pline = pline;
