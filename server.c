@@ -49,8 +49,7 @@ enum type get_type(char * string) {
 }
 
 void set_type(char * string, enum type t) {
-    string[0] = t;
-    string[1] = 0;
+    *(short*)string = t;
 }
 
 typedef struct pipeline {
@@ -71,6 +70,26 @@ char * get_domain(char * string) {
     return string + DOMAIN_IX;
 }
 
+void prep_connect_str(char * buffer, char * domain, char * iden, 
+                      char * to_client_fp, char * to_daemon_fp, Pipeline * pline) {
+    strncpy(domain, get_domain(buffer), DOMAIN_LEN); 
+    strcpy(iden, get_iden(buffer));
+
+    strcpy(to_client_fp, domain);                       // domain
+    strcat(to_client_fp, "/");                          // domain/
+    strcat(to_client_fp, iden);                         // domain/identifier
+
+    strcpy(to_daemon_fp, to_client_fp);                 // domain/identifier
+
+    strcat(to_daemon_fp, "_WR");                        // domain/identifier_WR
+    strcat(to_client_fp, "_RD");                        // domain/identifier_RD
+
+    pline->domain = domain;
+    pline->iden = iden;
+    pline->to_client_fp = to_client_fp;
+    pline->to_daemon_fp = to_daemon_fp;
+
+}
 
 /*  Relays <RECEIVE IDENTIFIER MSG> to client */
 int do_receive(char * buffer, Pipeline * pline) {
@@ -292,38 +311,22 @@ int start_daemon(char * buffer) {
 
     // Make domain
     char domain[DOMAIN_LEN];
-    strncpy(domain, get_domain(buffer), DOMAIN_LEN);  // domain is maximum 255
+    char iden[IDEN_LEN];
+    char to_client_fp[BUF_SIZE];
+    char to_daemon_fp[BUF_SIZE];
+    Pipeline pline;
+
+    prep_connect_str(buffer, domain, iden, to_client_fp, to_daemon_fp, &pline);
 
     // Make domain directory
     if ( -1 == mkdir(domain, 0777) ) {
-        if (errno == EEXIST) {
+        if (errno == EEXIST) 
             errno = 0;
-        } else {
-            printf("Domain cannot be created\n");
+        else {
+            perror("Domain cannot be created");
             return -1;
         }
     }
-
-    // File path to FIFO
-    char iden[IDEN_LEN];
-    strcpy(iden, get_iden(buffer));
-
-    char to_client_fp[BUF_SIZE];
-    char to_daemon_fp[BUF_SIZE];
-    strcpy(to_client_fp, domain);                       // domain
-    strcat(to_client_fp, "/");                          // domain/
-    strcat(to_client_fp, iden);                         // domain/identifier
-
-    strcpy(to_daemon_fp, to_client_fp);                 // domain/identifier
-
-    strcat(to_daemon_fp, "_WR");                        // domain/identifier_WR
-    strcat(to_client_fp, "_RD");                        // domain/identifier_RD
-    
-    Pipeline pline;
-    pline.domain = domain;
-    pline.iden = iden;
-    pline.to_client_fp = to_client_fp;
-    pline.to_daemon_fp = to_daemon_fp;
 
     // Starting FIFO
     if ( mkfifo(to_client_fp, 0777) == -1 ) {
@@ -338,8 +341,7 @@ int start_daemon(char * buffer) {
     }
 
     // ========= Monitoring client =========
-	while (1)
-	{
+	while (1) {
         int fd_dae_RD = open(to_daemon_fp, O_RDWR);
         if (fd_dae_RD < 0) {
             perror("Failed to open FIFO to/from client");
@@ -354,11 +356,11 @@ int start_daemon(char * buffer) {
 		FD_ZERO(&allfds); //   000000
 		FD_SET(fd_dae_RD, &allfds); // 100000
         
-		timeout.tv_sec = 2;
+		timeout.tv_sec = 15;
 		timeout.tv_usec = 0;
         timeout = timeout;
 		
-		int ret = select(maxfd, &allfds, NULL, NULL, NULL);
+		int ret = select(maxfd, &allfds, NULL, NULL, &timeout);
 
         // ======= NEW UPDATE =======
 		if (-1 == ret) {
@@ -392,7 +394,6 @@ int start_daemon(char * buffer) {
 /* Gevent monitor
 */
 int main() {
-    // printf("hello");
 	if ((mkfifo("gevent", 0777) < 0)) {
 		perror("Cannot make fifo");
 	}
@@ -406,7 +407,6 @@ int main() {
         }
 
         int maxfd = gevent_fd + 1;
-
         fd_set allfds;
         struct timeval timeout;
 
@@ -420,7 +420,7 @@ int main() {
 		int ret = select(maxfd, &allfds, NULL, NULL, NULL);
 
 		if (-1 == ret) {
-			fprintf(stderr, "Error from select\n");	
+			perror("Error from select");	
 		} else if (0 == ret) {
 			perror("Nothing to report");
 
@@ -432,19 +432,17 @@ int main() {
                 printf("Failed to read\n");
                 return -1;
             }
+            close(gevent_fd);
+
             pid_t pid = fork();
             if (pid < 0) {
                 printf("Could not fork\n");
                 return -1;
             }
 
-            // Parent continues
-            if (pid != 0) {
-                close(gevent_fd);
-                continue;
-            } else {
-            // Child starts daemon
+            if (pid == 0) {
                 int dae = start_daemon(buffer);
+
                 if (dae == 1) {
                     break;
                 }
@@ -453,7 +451,5 @@ int main() {
 
 	}
 
-
-    // run_daemon(int fd_RD, int fd_WR);
 	return 0;
 }
