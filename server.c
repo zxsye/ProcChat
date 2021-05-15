@@ -108,31 +108,29 @@ int do_receive(char * buffer, const char * to_client_fp) {
 
 /*  Relays <RECEIVE IDENTIFIER MSG> to client */
 int do_recvcont(char * buffer, const char * to_client_fp) {
-    /*DEBUG*/perror("\nDoing recvcont");
-    //DEBUG*/errno = 0;
+    /*DEBUG*/perror("\n===== doing recvcont =====");
 
     if (get_type(buffer) != Recvcont) { 
         return -1;
     }
 
-    int fd = open(to_client_fp, O_RDWR);
+    int fd = open(to_client_fp, O_WRONLY);
     if (fd < 0) {
         fprintf(stderr, "do_receive: cannot open %s\n", to_client_fp);
         return -1;
     }
     if (write(fd, buffer, 2048) < 0) {
         fprintf(stderr, "do_receive: cannot write()\n");
-    } else {
-        /* DEBUG */ fprintf(stderr, "YAY wrote to client\n");
-        fprintf(stderr, "Target: %s\n", to_client_fp);
-        fprintf(stderr, "Identifer: %s\n", buffer + 2);
-        fprintf(stderr, "Msg: %s\n", buffer + 2 + 256);
-        fprintf(stderr, "Terminate: %d\n", (BYTE)buffer[2048 - 1]);
-        /* DEBUG */ fprintf(stderr, "From: %s\nMsg: %s\n\n", buffer + 2, buffer + 2 + 256);
     }
     close(fd);
+    /* DEBUG */ fprintf(stderr, "YAY wrote to client\n");
+    fprintf(stderr, "Target: %s\n", to_client_fp);
+    fprintf(stderr, "Identifer: %s\n", buffer + 2);
+    fprintf(stderr, "Msg: %s\n", buffer + 2 + 256);
+    fprintf(stderr, "Terminate: %d\n", (BYTE)buffer[2048 - 1]);
+    /* DEBUG */ fprintf(stderr, "From: %s\nMsg: %s\n\n", buffer + 2, buffer + 2 + 256);
     
-    return 1;
+    return 0;
 }
 
 
@@ -221,7 +219,7 @@ Takes in buffer for maximum 2048 characters.
 */
 int do_saycount(char * msg, const char * domain, const char * to_daemon_fp, const char * to_client_fp) {
 
-    fprintf(stderr, "\ndo_saycount:\n");
+    fprintf(stderr, "\n====== do_saycount ======\n");
     if (get_type(msg) != Saycount) {
         fprintf(stderr, "Failed do_saycount:\n");
         return -1;
@@ -262,14 +260,6 @@ int do_saycount(char * msg, const char * domain, const char * to_daemon_fp, cons
                 continue;
             }
 
-            //DEBUG*/printf("Writing from: %s :: %s\n", to_daemon_fp, pipepath);
-            // Writing now
-            int fd = open(pipepath, O_WRONLY);
-            if (fd < 0) {
-                perror("do_say: Error in piping message to other clients");
-                return -1;
-            }
-
             // Build RECEIVE message: RECEIVE <identifier> <message>
             char draft[BUF_SIZE] = {0};
             set_type(draft, Recvcont);
@@ -278,24 +268,25 @@ int do_saycount(char * msg, const char * domain, const char * to_daemon_fp, cons
             strncpy(draft + 2, identity, strlen(identity) - 3); // To remove _RD
             draft[2 + strlen(identity) - 3] = '\0';
             strcpy(draft + 2 + 256, SAY_MSG_INDEX(msg));
-            // strcpy(draft + 2 + 256, "poop");
 
             draft[BUF_SIZE - 1] = msg[BUF_SIZE - 1]; // terminating character
+
             // Write to other clients
-            if (write(fd, draft, 2048) < -1) {
+            int fd = open(pipepath, O_WRONLY);
+            if (fd < 0) {
+                perror("do_say: Error in piping message to other clients");
+                return -1;
+            }
+            if (write(fd, draft, 2048) < 0) {
                 perror("Failed writing");
             }
+            close(fd);
 
             fprintf(stderr, "Target: %s\n", pipepath);
             fprintf(stderr, "Identifer: %s\n", draft + 2);
             fprintf(stderr, "Msg: %s\n", draft + 2 + 256);
             fprintf(stderr, "Terminate: %d\n", (BYTE)draft[2048 - 1]);
-
-            // for (int i = 0; i < 2048; i++) {
-            //     fprintf(stderr, "%c", buffer[i]);
-            // }
             
-            close(fd);
         }
     }
     //DEBUG*/printf("Finished reading directory\n");
@@ -343,6 +334,9 @@ int handle_daemon_update(int fd_dae_RD,
         
     } else if ( get_type(buffer) == Recvcont) {
         do_recvcont(buffer, to_client_fp);
+
+    } else {
+        fprintf(stderr, "Not implemented type");
     }
     return 0;
 }
