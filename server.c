@@ -336,8 +336,12 @@ int start_daemon(char * buffer) {
     pline.iden = iden;
     pline.to_client_fp = to_client_fp;
     pline.to_daemon_fp = to_daemon_fp;
-    pline = pline;
 
+    fprintf(stderr, "%s\n", pline.domain);
+    fprintf(stderr, "%s\n", pline.iden);
+    fprintf(stderr, "%s\n", pline.to_client_fp);
+    fprintf(stderr, "%s\n", pline.to_daemon_fp);
+    
     // Starting FIFO
     if ( mkfifo(to_client_fp, 0777) == -1 ) {
         perror("Cannot make pipe to client");
