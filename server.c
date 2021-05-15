@@ -154,9 +154,7 @@ int do_say(char * buffer, Pipeline * pline) {
             char draft[BUF_SIZE] = {0};
             set_type(draft, Receive);
 
-            const char * identity = pline->iden;
-            strncpy(draft + 2, identity, strlen(identity) - 3); // To remove _RD
-            draft[2 + strlen(identity) - 3] = '\0';
+            strcpy(draft + 2, pline->iden); // To remove _RD
             strcpy(draft + 2 + 256, SAY_MSG_INDEX(buffer));
 
             // Write to other clients
@@ -222,9 +220,7 @@ int do_saycount(char * msg, Pipeline * pline) {
             char draft[BUF_SIZE] = {0};
             set_type(draft, Recvcont);
 
-            const char * identity = pline->iden;
-            strncpy(draft + 2, identity, strlen(identity) - 3); // To remove _RD
-            draft[2 + strlen(identity) - 3] = '\0';
+            strcpy(draft + 2, pline->iden); // To remove _RD
             strcpy(draft + 2 + 256, SAY_MSG_INDEX(msg));
 
             draft[BUF_SIZE - 1] = msg[BUF_SIZE - 1]; // terminating character
@@ -341,7 +337,7 @@ int start_daemon(char * buffer) {
     fprintf(stderr, "%s\n", pline.iden);
     fprintf(stderr, "%s\n", pline.to_client_fp);
     fprintf(stderr, "%s\n", pline.to_daemon_fp);
-    
+
     // Starting FIFO
     if ( mkfifo(to_client_fp, 0777) == -1 ) {
         perror("Cannot make pipe to client");
