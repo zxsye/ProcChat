@@ -123,10 +123,8 @@ int do_recvcont(char * buffer, const char * to_client_fp) {
         return -1;
     }
     if (write(fd, buffer, 2048) < 0) {
-        close(fd);
         fprintf(stderr, "do_receive: cannot write()\n");
     } else {
-        close(fd);
         /* DEBUG */ fprintf(stderr, "YAY wrote to client\n");
         fprintf(stderr, "Target: %s\n", to_client_fp);
         fprintf(stderr, "Identifer: %s\n", buffer + 2);
@@ -134,6 +132,7 @@ int do_recvcont(char * buffer, const char * to_client_fp) {
         fprintf(stderr, "Terminate: %d\n", (BYTE)buffer[2048 - 1]);
         /* DEBUG */ fprintf(stderr, "From: %s\nMsg: %s\n\n", buffer + 2, buffer + 2 + 256);
     }
+    close(fd);
     
     return 1;
 }
@@ -283,7 +282,7 @@ int do_saycount(char * msg, const char * domain, const char * to_daemon_fp, cons
             strcpy(draft + 2 + 256, SAY_MSG_INDEX(msg));
             // strcpy(draft + 2 + 256, "poop");
 
-            draft[BUF_SIZE - 1] = msg[BUF_SIZE - 1];
+            draft[BUF_SIZE - 1] = msg[BUF_SIZE - 1]; // terminating character
             // Write to other clients
             if (write(fd, draft, 2048) < -1) {
                 perror("Failed writing");
