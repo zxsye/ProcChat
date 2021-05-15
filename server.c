@@ -73,7 +73,7 @@ char * get_domain(char * string) {
 
 
 /*  Relays <RECEIVE IDENTIFIER MSG> to client */
-int do_receive(char * buffer, const char * to_client_fp) {
+int do_receive(char * buffer, Pipeline * pline) {
     //DEBUG*/perror("Doing receive");
     //DEBUG*/errno = 0;
 
@@ -81,14 +81,14 @@ int do_receive(char * buffer, const char * to_client_fp) {
         return -1;
     }
 
-    int fd = open(to_client_fp, O_WRONLY);
+    int fd = open(pline->to_client_fp, O_WRONLY);
     if (fd < 0) {
-        fprintf(stderr, "do_receive: cannot open %s\n", to_client_fp);
+        fprintf(stderr, "do_receive: cannot open %s\n", pline->to_client_fp);
         return -1;
     }
     if (write(fd, buffer, 2048) < 0) {
         fprintf(stderr, "do_receive: cannot write()\n");
-        fprintf(stderr, "Target: %s\n", to_client_fp);
+        fprintf(stderr, "Target: %s\n", pline->to_client_fp);
         fprintf(stderr, "Identifer: %s\n", buffer + 2);
         fprintf(stderr, "Msg: %s\n\n", buffer + 2 + 256);
     }
@@ -98,14 +98,14 @@ int do_receive(char * buffer, const char * to_client_fp) {
 }
 
 /*  Relays <RECEIVE IDENTIFIER MSG> to client */
-int do_recvcont(char * buffer, const char * to_client_fp) {
+int do_recvcont(char * buffer, Pipeline * pline) {
     if (get_type(buffer) != Recvcont) { 
         return -1;
     }
 
-    int fd = open(to_client_fp, O_WRONLY);
+    int fd = open(pline->to_client_fp, O_WRONLY);
     if (fd < 0) {
-        fprintf(stderr, "do_receive: cannot open %s\n", to_client_fp);
+        fprintf(stderr, "do_receive: cannot open %s\n", pline->to_client_fp);
         return -1;
     }
 
@@ -121,10 +121,10 @@ int do_recvcont(char * buffer, const char * to_client_fp) {
 /*
 Takes in buffer for maximum 2048 characters.
 */
-int do_say(char * buffer, const char * domain, const char * to_daemon_fp, const char * to_client_fp) {
+int do_say(char * buffer, Pipeline * pline) {
     // Find all other client handlers in current domain
     struct dirent *de;              // Pointer for directory entry
-    DIR *dr = opendir(domain);      // opendir() returns a pointer of DIR type. 
+    DIR *dr = opendir(pline->domain);      // opendir() returns a pointer of DIR type. 
   
     if (dr == NULL) { // opendir returns NULL if couldn't open directory
         perror("do_say: Could not open current directory" );
@@ -143,18 +143,18 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp, const 
         if (filename[filenm_len - 2] == 'W' && filename[filenm_len - 1] == 'R') {
 
             char pipepath[BUF_SIZE];
-            strcpy(pipepath, domain);
+            strcpy(pipepath, pline->domain);
             strcat(pipepath, "/");
             strcat(pipepath, filename);
 
             // Skip write pipes to own client
-            if ( strcmp(pipepath, to_daemon_fp) == 0 ) continue;
+            if ( strcmp(pipepath, pline->to_daemon_fp) == 0 ) continue;
 
             // Build RECEIVE message: RECEIVE <identifier> <message>
             char draft[BUF_SIZE] = {0};
             set_type(draft, Receive);
 
-            const char * identity = FILEPATH_TO_IDEN(to_client_fp, domain);
+            const char * identity = pline->iden;
             strncpy(draft + 2, identity, strlen(identity) - 3); // To remove _RD
             draft[2 + strlen(identity) - 3] = '\0';
             strcpy(draft + 2 + 256, SAY_MSG_INDEX(buffer));
@@ -180,7 +180,7 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp, const 
 /*
 Takes in buffer for maximum 2048 characters.
 */
-int do_saycount(char * msg, const char * domain, const char * to_daemon_fp, const char * to_client_fp) {
+int do_saycount(char * msg, Pipeline * pline) {
 
 
     if (get_type(msg) != Saycount) {
@@ -190,7 +190,7 @@ int do_saycount(char * msg, const char * domain, const char * to_daemon_fp, cons
 
     // Find all other client handlers in current domain
     struct dirent *de;              // Pointer for directory entry
-    DIR *dr = opendir(domain);      // opendir() returns a pointer of DIR type. 
+    DIR *dr = opendir(pline->domain);      // opendir() returns a pointer of DIR type. 
   
     if (dr == NULL) { // opendir returns NULL if couldn't open directory
         perror("do_say: Could not open current directory" );
@@ -208,13 +208,13 @@ int do_saycount(char * msg, const char * domain, const char * to_daemon_fp, cons
         if (filename[filenm_len - 2] == 'W' && filename[filenm_len - 1] == 'R') {
 
             char pipepath[BUF_SIZE];
-            strcpy(pipepath, domain);
+            strcpy(pipepath, pline->domain);
             strcat(pipepath, "/");
             strcat(pipepath, filename);
 
             // Skip write pipes to own client
             
-            if (strcmp(pipepath, to_daemon_fp) == 0) {  
+            if (strcmp(pipepath, pline->to_daemon_fp) == 0) {  
                 continue;
             }
 
@@ -222,7 +222,7 @@ int do_saycount(char * msg, const char * domain, const char * to_daemon_fp, cons
             char draft[BUF_SIZE] = {0};
             set_type(draft, Recvcont);
 
-            const char * identity = FILEPATH_TO_IDEN(to_client_fp, domain);
+            const char * identity = pline->iden;
             strncpy(draft + 2, identity, strlen(identity) - 3); // To remove _RD
             draft[2 + strlen(identity) - 3] = '\0';
             strcpy(draft + 2 + 256, SAY_MSG_INDEX(msg));
@@ -251,15 +251,12 @@ int do_saycount(char * msg, const char * domain, const char * to_daemon_fp, cons
 
 
 */
-int handle_daemon_update(char * buffer,
-                          const char * to_client_fp, const char * to_daemon_fp,
-                          const char * domain)
-{
+int handle_daemon_update(char * buffer, Pipeline * pline) {
     
     
     // Check message type
     if ( get_type(buffer) == Say) {
-        int st = do_say(buffer, domain, to_daemon_fp, to_client_fp); // write to other daemons
+        int st = do_say(buffer, pline); // write to other daemons
 
         if (st == -1) {
             perror("Failed do_say");
@@ -267,7 +264,7 @@ int handle_daemon_update(char * buffer,
         }
 
     } else if ( get_type(buffer) == Saycount) {
-        int st = do_saycount(buffer, domain, to_daemon_fp, to_client_fp); // write to other daemons
+        int st = do_saycount(buffer, pline); // write to other daemons
 
         if (st == -1) {
             perror("Failed do_say");
@@ -275,10 +272,10 @@ int handle_daemon_update(char * buffer,
         }
     } else if ( get_type(buffer) == Receive) {
         // DEBUG */ printf("\n===== doing receive ====\n");
-        do_receive(buffer, to_client_fp);
+        do_receive(buffer, pline);
         
     } else if ( get_type(buffer) == Recvcont) {
-        do_recvcont(buffer, to_client_fp);
+        do_recvcont(buffer, pline);
 
     } else {
         fprintf(stderr, "Not implemented type");
@@ -394,9 +391,7 @@ int start_daemon(char * buffer) {
                 return -1;
             }
 
-            int succ = handle_daemon_update(buffer,
-                                            to_client_fp, to_daemon_fp,
-                                            domain_str);
+            int succ = handle_daemon_update(buffer, &pline);
             if (succ == -1) {
                 return -1; //@TODO: change to something else
             }
@@ -461,6 +456,7 @@ int main() {
 
             // Parent continues
             if (pid != 0) {
+                close(gevent_fd);
                 continue;
             } else {
             // Child starts daemon
@@ -471,7 +467,6 @@ int main() {
             }
 		}
 
-        close(gevent_fd);
 	}
 
 
