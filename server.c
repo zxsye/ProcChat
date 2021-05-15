@@ -404,22 +404,23 @@ int start_daemon(char * buffer) {
 
 
     // Open pipe as FD
-    int fd_dae_RD = open(to_daemon_fp, O_RDWR);
-    // int fd_dae_WR = open(to_client_fp, O_RDWR);
-    // if (fd_dae_RD < 0 || fd_dae_WR < 0) {
-    if (fd_dae_RD < 0) {
-		perror("Failed to open FIFO to/from client");
-		return 1;
-	}
-    
-    // Reading from client
-	fd_set allfds;
-	int maxfd = fd_dae_RD + 1;
-	struct timeval timeout;
 
     // ========= Monitoring client =========
 	while (1)
 	{
+        int fd_dae_RD = open(to_daemon_fp, O_RDWR);
+        // int fd_dae_WR = open(to_client_fp, O_RDWR);
+        // if (fd_dae_RD < 0 || fd_dae_WR < 0) {
+        if (fd_dae_RD < 0) {
+            perror("Failed to open FIFO to/from client");
+            return 1;
+        }
+        
+        // Reading from client
+        fd_set allfds;
+        int maxfd = fd_dae_RD + 1;
+        struct timeval timeout;
+
 		FD_ZERO(&allfds); //   000000
 		FD_SET(fd_dae_RD, &allfds); // 100000
         
@@ -449,10 +450,10 @@ int start_daemon(char * buffer) {
             }
 
 		}
+        close(fd_dae_RD);
 	}
     
     // close(fd_dae_WR);
-    close(fd_dae_RD);
 
     return 1;
 }
