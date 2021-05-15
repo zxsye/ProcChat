@@ -100,10 +100,8 @@ int do_receive(char * buffer, const char * to_client_fp) {
         fprintf(stderr, "Target: %s\n", to_client_fp);
         fprintf(stderr, "Identifer: %s\n", buffer + 2);
         fprintf(stderr, "Msg: %s\n\n", buffer + 2 + 256);
-    } else {
-        // DEBUG */ printf("wrote to client\n");
-        // DEBUG */ printf("From: %s\nMsg: %s\n", buffer + 2, buffer + 2 + 256);
     }
+    
     close(fd);
     return 1;
 }
