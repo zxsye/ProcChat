@@ -266,7 +266,7 @@ int do_saycount(char * msg, Pipeline * pline) {
 
 
 */
-int handle_daemon_update(char * buffer, Pipeline * pline) {
+int handle_update(char * buffer, Pipeline * pline) {
     // Check message type
     if (get_type(buffer) == Say) {
         if ( -1 == do_say(buffer, pline) ) {
@@ -287,6 +287,8 @@ int handle_daemon_update(char * buffer, Pipeline * pline) {
         if ( -1 == do_recvcont(buffer, pline) ) {
             perror("Failed do_recvcont");
         }
+    } else if ( get_type(buffer) == Disconnect) {
+        return Disconnect;
     } else {
         fprintf(stderr, "Not implemented type");
     }
@@ -302,7 +304,7 @@ Takes in fd for gevent, reads latest message from pipe to construct new pipes fo
 - Return 2: 
 
 */
-int start_daemon(char * buffer) {
+int run_daemon(char * buffer) {
 
     if (get_type(buffer) != Connect) {
         printf("Type is not connect\n");
@@ -377,9 +379,12 @@ int start_daemon(char * buffer) {
                 return -1;
             }
 
-            int succ = handle_daemon_update(buffer, &pline);
-            if (succ == -1) {
+            int st = handle_update(buffer, &pline);
+            if (st == -1) {
                 return -1;
+            } else if (st == Disconnect) {
+                close(fd_dae_RD);
+                return Disconnect;
             }
 
 		}
@@ -441,9 +446,14 @@ int main() {
             }
 
             if (pid == 0) {
-                int dae = start_daemon(buffer);
+                int dae = run_daemon(buffer);
 
                 if (dae == 1) {
+                    break;
+                } else if (dae == Disconnect) {
+                    break;
+                } else if (dae == -1) {
+                    perror("run_daemon crashed");
                     break;
                 }
             }
