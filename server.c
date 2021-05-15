@@ -416,11 +416,11 @@ int start_daemon(char * buffer) {
     // ========== FORKING ========== //
 
     // Open pipe as FD
-    int fd_dae_WR = open(to_client_fp, O_RDONLY); 
+    int fd_dae_WR = open(to_client_fp, O_RDWR);
         /*  Client hasn't opened here yet:
                 NON_BLOCK | O_WRONLY = open() returns -1
          */
-    int fd_dae_RD = open(to_daemon_fp, O_RDWR);
+    int fd_dae_RD = open(to_daemon_fp, O_RDONLY);
     if (fd_dae_RD < 0 || fd_dae_WR < 0) {
 		perror("Failed to open FIFO to/from client");
 		return 1;
