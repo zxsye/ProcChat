@@ -263,10 +263,12 @@ int do_saycount(char * msg, Pipeline * pline) {
 }
 
 /*
-
+-1 = error
+0 = no error
+1 = DISCONNECT
 
 */
-int handle_daemon_update(char * buffer, Pipeline * pline) {
+int handle_update(char * buffer, Pipeline * pline) {
     // Check message type
     if (get_type(buffer) == Say) {
         if ( -1 == do_say(buffer, pline) ) {
@@ -287,6 +289,8 @@ int handle_daemon_update(char * buffer, Pipeline * pline) {
         if ( -1 == do_recvcont(buffer, pline) ) {
             perror("Failed do_recvcont");
         }
+    } else if ( get_type(buffer) == Disconnect {
+        return 1;
     } else {
         fprintf(stderr, "Not implemented type");
     }
@@ -297,9 +301,8 @@ int handle_daemon_update(char * buffer, Pipeline * pline) {
 Takes in fd for gevent, reads latest message from pipe to construct new pipes for client.
 
 - Return -1: tell parent failure
-- Return 0: tell parent of birth success 
-- Return 1: tell child's main of suicide
-- Return 2: 
+- Return 0: no errors
+- Return 1: daemon has died
 
 */
 int start_daemon(char * buffer) {
@@ -376,19 +379,22 @@ int start_daemon(char * buffer) {
                 printf("Failed to read\n");
                 return -1;
             }
+            close(fd_dae_RD);
 
-            int succ = handle_daemon_update(buffer, &pline);
-            if (succ == -1) {
+            int st = handle_update(buffer, &pline);
+            if (st == -1) {
                 return -1;
+            } else if (st == 0) {
+                return 1;
             }
 
 		}
-        close(fd_dae_RD);
+        
 	}
     
     // close(fd_dae_WR);
 
-    return 1;
+    return 0;
 }
 
 /* Gevent monitor
@@ -447,8 +453,8 @@ int main() {
                     break;
                 }
             }
-		}
 
+		}
 	}
 
 	return 0;
