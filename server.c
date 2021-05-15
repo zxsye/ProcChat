@@ -289,7 +289,7 @@ int handle_update(char * buffer, Pipeline * pline) {
         if ( -1 == do_recvcont(buffer, pline) ) {
             perror("Failed do_recvcont");
         }
-    } else if ( get_type(buffer) == Disconnect) {
+    } else if ( get_type(buffer) == Disconnect {
         return 1;
     } else {
         fprintf(stderr, "Not implemented type");
@@ -379,17 +379,17 @@ int start_daemon(char * buffer) {
                 printf("Failed to read\n");
                 return -1;
             }
-            close(fd_dae_RD);
 
             int st = handle_update(buffer, &pline);
             if (st == -1) {
                 return -1;
             } else if (st == 0) {
+                close(fd_dae_RD);
                 return 1;
             }
 
 		}
-        
+        close(fd_dae_RD);
 	}
     
     // close(fd_dae_WR);
