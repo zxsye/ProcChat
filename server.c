@@ -380,10 +380,17 @@ int run_daemon(char * buffer) {
             }
 
             int st = handle_update(buffer, &pline);
+
             if (st == -1) {
                 return -1;
             } else if (st == Disconnect) {
                 close(fd_dae_RD);
+                if (unlink(to_daemon_fp) == 0) {
+                    printf("FIFO deleted.\n");
+                }
+                if (unlink(to_client_fp) == 0) {
+                    perror("to_client_fp FIFO closed");
+                }
                 return Disconnect;
             }
 
@@ -451,6 +458,9 @@ int main() {
                 if (dae == 1) {
                     break;
                 } else if (dae == Disconnect) {
+                    if (unlink("gevent") == 0) {
+                        perror("gevent FIFO closed");
+                    }
                     break;
                 } else if (dae == -1) {
                     perror("run_daemon crashed");
