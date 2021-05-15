@@ -433,7 +433,7 @@ int start_daemon(char * buffer) {
     // printf("@@@@@@@@@ CHILD: %d @@@@@@@@@\n", getpid());
 
     // Open pipe as FD
-    int fd_dae_WR = open(to_client_fp, O_RDWR);
+    int fd_dae_WR = open(to_client_fp, O_WRONLY);
     int fd_dae_RD = open(to_daemon_fp, O_RDWR);
     if (fd_dae_RD < 0 || fd_dae_WR < 0) {
 		perror("Failed to open gevent FD");
