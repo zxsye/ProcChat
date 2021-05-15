@@ -318,7 +318,7 @@ int start_daemon(char * buffer) {
     char identifer[256];
     strcpy(domain, get_domain(buffer));
     strcpy(domain, get_iden(buffer));
-    printf("%s, %s\n", domain, identifer);
+    fprintf(stderr, "%s, %s\n", domain, identifer);
 
     char to_client_fp[BUF_SIZE];
     char to_daemon_fp[BUF_SIZE];
