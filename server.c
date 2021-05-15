@@ -416,7 +416,8 @@ int start_daemon(char * buffer) {
     // ========== FORKING ========== //
 
     // Open pipe as FD
-    int fd_dae_WR = open(to_client_fp, O_RDWR);
+    // int fd_dae_WR = open(to_client_fp, O_RDWR);
+    int fd_dae_WR = 1;
         /*  Client hasn't opened here yet:
                 NON_BLOCK | O_WRONLY = open() returns -1
          */
