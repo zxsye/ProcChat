@@ -90,7 +90,7 @@ int do_receive(char * buffer, const char * to_client_fp) {
         return -1;
     }
 
-    int fd = open(to_client_fp, O_RDWR);
+    int fd = open(to_client_fp, O_WRONLY);
     if (fd < 0) {
         fprintf(stderr, "do_receive: cannot open %s\n", to_client_fp);
         return -1;
@@ -162,7 +162,7 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp, const 
             continue;
         }
         
-        // Directly write to client RD
+        // Directly write to other client handlers (WR)
         if (filename[filenm_len - 2] == 'W' && filename[filenm_len - 1] == 'R') {
 
             char pipepath[BUF_SIZE];
@@ -179,11 +179,6 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp, const 
 
             //DEBUG*/printf("Writing from: %s :: %s\n", to_daemon_fp, pipepath);
             // Writing now
-            int fd = open(pipepath, O_RDWR);
-            if (fd < 0) {
-                perror("do_say: Error in piping message to other clients");
-                return -1;
-            }
 
             // Build RECEIVE message: RECEIVE <identifier> <message>
             char draft[BUF_SIZE] = {0};
@@ -195,9 +190,15 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp, const 
             strcpy(draft + 2 + 256, SAY_MSG_INDEX(buffer));
 
             // Write to other clients
+            int fd = open(pipepath, O_WRONLY);
+            if (fd < 0) {
+                perror("do_say: Error in piping message to other clients");
+                return -1;
+            }
             if (write(fd, draft, 2048) < -1) {
                 perror("Failed writing");
             }
+            close(fd);
 
             // CHECKING MESSAGE SENT PROPERLY
             // printf("Type = ");
@@ -210,7 +211,6 @@ int do_say(char * buffer, const char * domain, const char * to_daemon_fp, const 
             // printf("msg: %s\n\n", draft + 2 + 256);
             ////////
             
-            close(fd);
         }
     }
     //DEBUG*/printf("Finished reading directory\n");
@@ -417,12 +417,8 @@ int start_daemon(char * buffer) {
 
     // Open pipe as FD
     // int fd_dae_WR = open(to_client_fp, O_RDWR);
-    int fd_dae_WR = 1;
-        /*  Client hasn't opened here yet:
-                NON_BLOCK | O_WRONLY = open() returns -1
-         */
     int fd_dae_RD = open(to_daemon_fp, O_RDONLY);
-    if (fd_dae_RD < 0 || fd_dae_WR < 0) {
+    if (fd_dae_RD < 0) {
 		perror("Failed to open FIFO to/from client");
 		return 1;
 	}
@@ -467,7 +463,6 @@ int start_daemon(char * buffer) {
 		}
 	}
     
-    close(fd_dae_WR);
     close(fd_dae_RD);
 
     return 1;
