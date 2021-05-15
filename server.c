@@ -108,7 +108,7 @@ int do_receive(char * buffer, const char * to_client_fp) {
 
 /*  Relays <RECEIVE IDENTIFIER MSG> to client */
 int do_recvcont(char * buffer, const char * to_client_fp) {
-    /*DEBUG*/perror("\n===== doing recvcont =====");
+    // /*DEBUG*/perror("\n===== doing recvcont =====");
 
     if (get_type(buffer) != Recvcont) { 
         return -1;
@@ -123,12 +123,12 @@ int do_recvcont(char * buffer, const char * to_client_fp) {
         fprintf(stderr, "do_receive: cannot write()\n");
     }
     close(fd);
-    /* DEBUG */ fprintf(stderr, "YAY wrote to client\n");
-    fprintf(stderr, "Target: %s\n", to_client_fp);
-    fprintf(stderr, "Identifer: %s\n", buffer + 2);
-    fprintf(stderr, "Msg: %s\n", buffer + 2 + 256);
-    fprintf(stderr, "Terminate: %d\n", (BYTE)buffer[2048 - 1]);
-    /* DEBUG */ fprintf(stderr, "From: %s\nMsg: %s\n\n", buffer + 2, buffer + 2 + 256);
+    // /* DEBUG */ fprintf(stderr, "YAY wrote to client\n");
+    // fprintf(stderr, "Target: %s\n", to_client_fp);
+    // fprintf(stderr, "Identifer: %s\n", buffer + 2);
+    // fprintf(stderr, "Msg: %s\n", buffer + 2 + 256);
+    // fprintf(stderr, "Terminate: %d\n", (BYTE)buffer[2048 - 1]);
+    // /* DEBUG */ fprintf(stderr, "From: %s\nMsg: %s\n\n", buffer + 2, buffer + 2 + 256);
     
     return 0;
 }
@@ -219,7 +219,7 @@ Takes in buffer for maximum 2048 characters.
 */
 int do_saycount(char * msg, const char * domain, const char * to_daemon_fp, const char * to_client_fp) {
 
-    fprintf(stderr, "\n====== do_saycount ======\n");
+    // fprintf(stderr, "\n====== do_saycount ======\n");
     if (get_type(msg) != Saycount) {
         fprintf(stderr, "Failed do_saycount:\n");
         return -1;
@@ -282,10 +282,10 @@ int do_saycount(char * msg, const char * domain, const char * to_daemon_fp, cons
             }
             close(fd);
 
-            fprintf(stderr, "Target: %s\n", pipepath);
-            fprintf(stderr, "Identifer: %s\n", draft + 2);
-            fprintf(stderr, "Msg: %s\n", draft + 2 + 256);
-            fprintf(stderr, "Terminate: %d\n", (BYTE)draft[2048 - 1]);
+            // fprintf(stderr, "Target: %s\n", pipepath);
+            // fprintf(stderr, "Identifer: %s\n", draft + 2);
+            // fprintf(stderr, "Msg: %s\n", draft + 2 + 256);
+            // fprintf(stderr, "Terminate: %d\n", (BYTE)draft[2048 - 1]);
             
         }
     }
