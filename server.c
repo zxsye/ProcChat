@@ -416,7 +416,8 @@ int main() {
 		perror("Cannot make fifo");
 	}
 
-    signal(SIGUSR1, handle_suicide);
+    void (*handler)(int) = handle_suicide;
+    signal(SIGUSR1, handler);
 
 	while (1)
 	{
