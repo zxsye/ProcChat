@@ -351,7 +351,7 @@ int run_daemon(char * buffer) {
     }
 
     // ========= Monitoring client =========
-	while (1) {
+	while (alive) {
         int fd_dae_RD = open(to_daemon_fp, O_RDWR);
         if (fd_dae_RD < 0) {
             perror("Failed to open FIFO to/from client");
@@ -392,25 +392,21 @@ int run_daemon(char * buffer) {
             if (st == -1) {
                 return -1;
             } else if (st == Disconnect) {
-
                 close(fd_dae_RD);
-                if (unlink(to_daemon_fp) != 0) {
-                    perror("Cannot close to_daemon_fp");
-                }
-                if (unlink(to_client_fp) != 0) {
-                    perror("Cannot close to_client_fp");
-                }
-                return Disconnect;
+                break;
             }
 
 		}
         close(fd_dae_RD);
 	}
-    
-    // close(fd_dae_WR);
 
- 
-    return 1;
+    if (unlink(to_daemon_fp) != 0) {
+        perror("Cannot close to_daemon_fp");
+    }
+    if (unlink(to_client_fp) != 0) {
+        perror("Cannot close to_client_fp");
+    }
+    return Disconnect;
 }
 
 /* Gevent monitor
@@ -480,7 +476,7 @@ int main() {
 		}
 
 	}
-    
+
     if (unlink("gevent") != 0) {
         perror("Cannot close gevent");
     }
