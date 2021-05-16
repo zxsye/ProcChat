@@ -408,6 +408,7 @@ int run_daemon(char * buffer) {
 
 		} else if (select_ret == 0) {
             // Timer expired
+            perror("timer expired");
             close(fd_dae_RD);
 
             if (client_alive) {
@@ -419,7 +420,6 @@ int run_daemon(char * buffer) {
                 // Send new ping
                 char ping[BUF_SIZE] ={0};
                 *(short*)ping = Ping;
-                perror("Ping sent!");
                 daemon_protocol(ping, &pline);
 
             } else if (!client_alive) {
@@ -442,7 +442,6 @@ int run_daemon(char * buffer) {
         if (dp == -1) {
             return -1;
         } else if ( dp == Pong ) {
-            perror("Pong received!");
             client_alive = 1;
         } else if ( dp == Disconnect) {
             break;
