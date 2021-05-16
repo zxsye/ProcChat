@@ -455,6 +455,7 @@ int main() {
             }
 
             if (pid == 0) {
+                perror("Child started");
                 int dae = run_daemon(buffer);
 
                 if (dae == 1) {
@@ -464,7 +465,7 @@ int main() {
                     if (unlink("gevent") != 0) {
                         perror("Cannot close gevent");
                     }
-                    // perror("Terminating...");
+                    perror("Terminating...");
                     return 0;
 
                 } else if (dae == -1) {
