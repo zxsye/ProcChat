@@ -182,14 +182,17 @@ int domain_broadcast(char * msg, Pipeline * pline) {
 /*
 Takes in buffer for maximum 2048 characters.
 */
-int do_say(char * buffer, Pipeline * pline) {
-
+int do_say(char * msg, Pipeline * pline) {
+    if (get_type(msg) != Say) {
+            fprintf(stderr, "Failed do_saycount:\n");
+            return -1;
+        }
 
     char draft[BUF_SIZE] = {0};
     set_type(draft, Receive);
 
     strcpy(draft + 2, pline->iden); // To remove _RD
-    strcpy(draft + 2 + 256, SAY_MSG_INDEX(buffer));
+    strcpy(draft + 2 + 256, SAY_MSG_INDEX(msg));
 
     domain_broadcast(draft, pline);
     return 0;
@@ -198,8 +201,8 @@ int do_say(char * buffer, Pipeline * pline) {
 /*
 Takes in buffer for maximum 2048 characters.
 */
-int do_saycount(char * msg, Pipeline * pline) {
-    if (get_type(msg) != Saycount) {
+int do_saycount(char * in_mail, Pipeline * pline) {
+    if (get_type(in_mail) != Saycount) {
         fprintf(stderr, "Failed do_saycount:\n");
         return -1;
     }
@@ -209,12 +212,12 @@ int do_saycount(char * msg, Pipeline * pline) {
     set_type(draft, Recvcont);
 
     strcpy(draft + 2, pline->iden); // To remove _RD
-    strcpy(draft + 2 + 256, SAY_MSG_INDEX(msg));
+    strcpy(draft + 2 + 256, SAY_MSG_INDEX(in_mail));
 
-    draft[BUF_SIZE - 1] = msg[BUF_SIZE - 1]; // terminating character
+    draft[BUF_SIZE - 1] = in_mail[BUF_SIZE - 1]; // terminating character
 
     // Broadcast
-    domain_broadcast(msg, pline);
+    domain_broadcast(draft, pline);
 
     return 0;
 }
