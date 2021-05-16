@@ -399,7 +399,8 @@ int run_daemon(char * buffer) {
 	}
     
     // close(fd_dae_WR);
-
+    
+ 
     return 1;
 }
 
