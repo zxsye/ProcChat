@@ -95,29 +95,38 @@ void prep_connect_str(char * buffer, char * domain, char * iden,
 
 }
 
+int send_to_client(char * msg, Pipeline * pline) {
+    int ret = 0;
+    int fd = open(pline->to_client_fp, O_WRONLY);
+
+    if (fd < 0) {
+        fprintf(stderr, "send_to_client: cannot open %s\n", pline->to_client_fp);
+        ret = -1;
+    }
+    if (write(fd, msg, 2048) < 0) {
+        ret = -1;
+    }
+    close(fd);
+    return ret;
+}
+
 /*  Relays <RECEIVE IDENTIFIER MSG> to client */
 int do_receive(char * buffer, Pipeline * pline) {
-    //DEBUG*/perror("Doing receive");
-    //DEBUG*/errno = 0;
-
+    
     if (get_type(buffer) != Receive) {
         return -1;
     }
-
-    int fd = open(pline->to_client_fp, O_WRONLY);
-    if (fd < 0) {
-        fprintf(stderr, "do_receive: cannot open %s\n", pline->to_client_fp);
-        return -1;
-    }
-    if (write(fd, buffer, 2048) < 0) {
+    
+    int ret = send_to_client(buffer, pline);
+    if (ret == -1) {
         fprintf(stderr, "do_receive: cannot write()\n");
         fprintf(stderr, "Target: %s\n", pline->to_client_fp);
         fprintf(stderr, "Identifer: %s\n", buffer + 2);
         fprintf(stderr, "Msg: %s\n\n", buffer + 2 + 256);
+        return -1;
     }
-
-    close(fd);
-    return 1;
+    
+    return 0;
 }
 
 /*  Relays <RECEIVE IDENTIFIER MSG> to client */
@@ -293,12 +302,12 @@ int daemon_protocol(char * buffer, Pipeline * pline) {
         }
     } else if ( get_type(buffer) == Disconnect) {
         return Disconnect;
-
     } else if ( get_type(buffer) == Pong) {
         return Pong;
+    } else if ( get_type(buffer) == Ping) {
 
     } else {
-        fprintf(stderr, "Not implemented type");
+        fprintf(stderr, "Message is incorrect");
     }
     return 0;
 }
