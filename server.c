@@ -33,6 +33,14 @@
 #define SAY_MSG_INDEX(draft) (draft + 2)
 #define FILEPATH_TO_IDEN(filepath, domain) (filepath + strlen(domain) + 1)
 
+
+volatile int alive;
+
+void dsct_sig_handler(int arg) {
+    alive = 0;
+}
+
+
 enum type {
     Connect = 0,
     Say = 1,
@@ -412,7 +420,7 @@ int main() {
 		perror("Cannot make fifo");
 	}
 
-	while (1)
+	while (alive)
 	{
         int gevent_fd = open("gevent", O_RDWR);
         if (gevent_fd < 0) {
@@ -462,11 +470,7 @@ int main() {
                     break;
 
                 } else if (dae == Disconnect) {
-                    if (unlink("gevent") != 0) {
-                        perror("Cannot close gevent");
-                    }
-                    perror("Terminating...");
-                    return 0;
+                    break;
 
                 } else if (dae == -1) {
                     perror("run_daemon crashed");
@@ -476,5 +480,10 @@ int main() {
 		}
 
 	}
+    
+    if (unlink("gevent") != 0) {
+        perror("Cannot close gevent");
+    }
+    perror("Terminating...");
 	return 0;
 }
