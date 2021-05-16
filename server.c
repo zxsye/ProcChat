@@ -270,7 +270,7 @@ int do_saycount(char * msg, Pipeline * pline) {
 
 
 */
-int handle_update(char * buffer, Pipeline * pline) {
+int daemon_protocol(char * buffer, Pipeline * pline) {
     // Check message type
     if (get_type(buffer) == Say) {
         if ( -1 == do_say(buffer, pline) ) {
@@ -293,6 +293,10 @@ int handle_update(char * buffer, Pipeline * pline) {
         }
     } else if ( get_type(buffer) == Disconnect) {
         return Disconnect;
+
+    } else if ( get_type(buffer) == Pong) {
+        return Pong;
+
     } else {
         fprintf(stderr, "Not implemented type");
     }
@@ -346,6 +350,13 @@ int run_daemon(char * buffer) {
         return -1;
     }
 
+
+    struct timeval timeout;
+    timeout.tv_sec = 15;
+    timeout.tv_usec = 0;
+
+    int client_alive = 1;
+
     // ========= Monitoring client =========
 	while (1) {
         int fd_dae_RD = open(to_daemon_fp, O_RDWR);
@@ -356,54 +367,67 @@ int run_daemon(char * buffer) {
         
         // Reading from client
         fd_set allfds;
-        int maxfd = fd_dae_RD + 1;
-        struct timeval timeout;
+        int maxfd;
+        maxfd = fd_dae_RD + 1;
 
 		FD_ZERO(&allfds); //   000000
 		FD_SET(fd_dae_RD, &allfds); // 100000
-        
-		timeout.tv_sec = 15;
-		timeout.tv_usec = 0;
-        timeout = timeout;
 		
-		int ret = select(maxfd, &allfds, NULL, NULL, &timeout);
+		int select_ret = select(maxfd, &allfds, NULL, NULL, &timeout);
 
         // ======= NEW UPDATE =======
-		if (-1 == ret) {
-			fprintf(stderr, "Error from select");	
-		} else if (0 == ret) {
-			perror("Client said nothing...");
+		if (select_ret < 0) {
+            close(fd_dae_RD);
+			fprintf(stderr, "Error from select");
+            continue;
 
-		} else if (FD_ISSET(fd_dae_RD, &allfds)) {
+		} else if (select_ret == 0) {
+            // Timer expired
+            close(fd_dae_RD);
 
-            char buffer[BUF_SIZE];
-            int nread = read(fd_dae_RD, buffer, BUF_SIZE);
-            if (nread == -1) {
-                printf("Failed to read\n");
-                return -1;
+            if (client_alive) {
+                // Pong was received
+                timeout.tv_sec = 15;
+                timeout.tv_usec = 0;
+                client_alive = 0;
+
+                // Send new ping
+                char ping[BUF_SIZE] ={0};
+                *(short*)ping = Ping;
+                daemon_protocol(ping, &pline);
+
+            } else if (!client_alive) {
+                // Pong not received
+                break;
             }
+        }
 
-            int st = handle_update(buffer, &pline);
-
-            if (st == -1) {
-                return -1;
-            } else if (st == Disconnect) {
-
-                close(fd_dae_RD);
-                if (unlink(to_daemon_fp) != 0) {
-                    perror("Cannot close to_daemon_fp");
-                }
-                if (unlink(to_client_fp) != 0) {
-                    perror("Cannot close to_client_fp");
-                }
-                return Disconnect;
-            }
-
-		}
+        // Read new client update
+        char buffer[BUF_SIZE];
+        int nread = read(fd_dae_RD, buffer, BUF_SIZE);
         close(fd_dae_RD);
+        if (nread == -1) {
+            perror("Failed to read");
+            return -1;
+        }
+
+        // Handle update
+        int dp = daemon_protocol(buffer, &pline);
+        if (dp == -1) {
+            return -1;
+        } else if ( dp == Pong ) {
+            client_alive = 1;
+        } else if ( dp == Disconnect) {
+            break;
+        }
+
 	}
 
-    return 1;
+    if (unlink(to_daemon_fp) != 0)
+        perror("Cannot close to_daemon_fp");
+    if (unlink(to_client_fp) != 0)
+        perror("Cannot close to_client_fp");
+    return Disconnect;
 }
 
 void handle_suicide(int signum) {
@@ -477,6 +501,7 @@ int main() {
                 } else if (dae == -1) {
                     perror("run_daemon crashed");
                     break;
+                    
                 }
             }
 
