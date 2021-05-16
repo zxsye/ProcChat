@@ -112,7 +112,6 @@ int send_to_client(char * msg, Pipeline * pline) {
 
 /*  Relays <RECEIVE IDENTIFIER MSG> to client */
 int do_receive(char * buffer, Pipeline * pline) {
-    
     if (get_type(buffer) != Receive) {
         return -1;
     }
@@ -125,7 +124,7 @@ int do_receive(char * buffer, Pipeline * pline) {
         fprintf(stderr, "Msg: %s\n\n", buffer + 2 + 256);
         return -1;
     }
-    
+
     return 0;
 }
 
@@ -275,9 +274,22 @@ int do_saycount(char * msg, Pipeline * pline) {
     return 0;
 }
 
+/*  Relays <RECEIVE IDENTIFIER MSG> to client */
+int do_ping(char * ping, Pipeline * pline) {
+    if (get_type(ping) != Ping) {
+        return -1;
+    }
+    
+    int ret = send_to_client(ping, pline);
+    if (ret == -1)
+        return -1;
+
+    return 0;
+}
+
 /*
-
-
+Handles all "normal operation" messages for daemon.
+Otherwise return the message type.
 */
 int daemon_protocol(char * buffer, Pipeline * pline) {
     // Check message type
@@ -299,13 +311,17 @@ int daemon_protocol(char * buffer, Pipeline * pline) {
     } else if ( get_type(buffer) == Recvcont) {
         if ( -1 == do_recvcont(buffer, pline) ) {
             perror("Failed do_recvcont");
+            return -1;
         }
-    } else if ( get_type(buffer) == Disconnect) {
-        return Disconnect;
+    } else if ( get_type(buffer) == Ping) {
+        if ( -1 == do_ping(buffer, pline) ) {
+            perror("Failed do_ping");
+            return -1;
+        }
     } else if ( get_type(buffer) == Pong) {
         return Pong;
-    } else if ( get_type(buffer) == Ping) {
-
+    } else if ( get_type(buffer) == Disconnect) {
+        return Disconnect;
     } else {
         fprintf(stderr, "Message is incorrect");
     }
