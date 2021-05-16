@@ -33,14 +33,6 @@
 #define SAY_MSG_INDEX(draft) (draft + 2)
 #define FILEPATH_TO_IDEN(filepath, domain) (filepath + strlen(domain) + 1)
 
-
-volatile int alive;
-
-void dsct_sig_handler(int arg) {
-    alive = 0;
-}
-
-
 enum type {
     Connect = 0,
     Say = 1,
@@ -350,10 +342,9 @@ int run_daemon(char * buffer) {
         return -1;
     }
 
-    int fd_dae_RD;
     // ========= Monitoring client =========
-	while (alive) {
-        fd_dae_RD = open(to_daemon_fp, O_RDWR);
+	while (1) {
+        int fd_dae_RD = open(to_daemon_fp, O_RDWR);
         if (fd_dae_RD < 0) {
             perror("Failed to open FIFO to/from client");
             return 1;
@@ -393,21 +384,25 @@ int run_daemon(char * buffer) {
             if (st == -1) {
                 return -1;
             } else if (st == Disconnect) {
-                break;
+
+                close(fd_dae_RD);
+                if (unlink(to_daemon_fp) != 0) {
+                    perror("Cannot close to_daemon_fp");
+                }
+                if (unlink(to_client_fp) != 0) {
+                    perror("Cannot close to_client_fp");
+                }
+                return Disconnect;
             }
 
 		}
         close(fd_dae_RD);
 	}
+    
+    // close(fd_dae_WR);
 
-    close(fd_dae_RD);
-    // if (unlink(to_daemon_fp) != 0) {
-    //     perror("Cannot close to_daemon_fp");
-    // }
-    // if (unlink(to_client_fp) != 0) {
-    //     perror("Cannot close to_client_fp");
-    // }
-    return Disconnect;
+ 
+    return 1;
 }
 
 /* Gevent monitor
@@ -417,7 +412,7 @@ int main() {
 		perror("Cannot make fifo");
 	}
 
-	while (alive)
+	while (1)
 	{
         int gevent_fd = open("gevent", O_RDWR);
         if (gevent_fd < 0) {
@@ -460,14 +455,17 @@ int main() {
             }
 
             if (pid == 0) {
-                perror("Child started");
                 int dae = run_daemon(buffer);
 
                 if (dae == 1) {
                     break;
 
                 } else if (dae == Disconnect) {
-                    break;
+                    if (unlink("gevent") != 0) {
+                        perror("Cannot close gevent");
+                    }
+                    // perror("Terminating...");
+                    return 0;
 
                 } else if (dae == -1) {
                     perror("run_daemon crashed");
@@ -477,10 +475,5 @@ int main() {
 		}
 
 	}
-
-    // if (unlink("gevent") != 0) {
-    //     perror("Cannot close gevent");
-    // }
-    perror("Terminating...");
 	return 0;
 }
