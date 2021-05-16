@@ -384,12 +384,13 @@ int run_daemon(char * buffer) {
             if (st == -1) {
                 return -1;
             } else if (st == Disconnect) {
+
                 close(fd_dae_RD);
-                if (unlink(to_daemon_fp) == 0) {
-                    // printf("FIFO deleted.\n");
+                if (unlink(to_daemon_fp) != 0) {
+                    perror("Cannot close to_daemon_fp");
                 }
-                if (unlink(to_client_fp) == 0) {
-                    // perror("to_client_fp FIFO closed");
+                if (unlink(to_client_fp) != 0) {
+                    perror("Cannot close to_client_fp");
                 }
                 return Disconnect;
             }
@@ -458,11 +459,14 @@ int main() {
 
                 if (dae == 1) {
                     break;
+
                 } else if (dae == Disconnect) {
-                    if (unlink("gevent") == 0) {
-                        // perror("gevent FIFO closed");
+                    if (unlink("gevent") != 0) {
+                        perror("Cannot close gevent");
                     }
+                    perror("Terminating...");
                     break;
+
                 } else if (dae == -1) {
                     perror("run_daemon crashed");
                     break;
@@ -471,6 +475,5 @@ int main() {
 		}
 
 	}
-
 	return 0;
 }
