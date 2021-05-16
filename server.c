@@ -97,7 +97,7 @@ void prep_connect_str(char * buffer, char * domain, char * iden,
 
 int send_to_client(char * msg, Pipeline * pline) {
     int ret = 0;
-    int fd = open(pline->to_client_fp, O_RDWR);
+    int fd = open(pline->to_client_fp, O_WRONLY);
 
     if (fd < 0) {
         fprintf(stderr, "send_to_client: cannot open %s\n", pline->to_client_fp);
