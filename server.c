@@ -413,6 +413,8 @@ int main() {
 		perror("Cannot make fifo");
 	}
 
+    signal(SIGUSR1, handle_suicide);
+
 	while (1)
 	{
         int gevent_fd = open("gevent", O_RDWR);
@@ -449,7 +451,9 @@ int main() {
             }
             close(gevent_fd);
 
+            // ========== FORKING =========== //
             pid_t pid = fork();
+
             if (pid < 0) {
                 printf("Could not fork\n");
                 return -1;
@@ -471,6 +475,7 @@ int main() {
                     break;
                 }
             }
+
 		}
 
 	}
