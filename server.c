@@ -350,9 +350,10 @@ int run_daemon(char * buffer) {
         return -1;
     }
 
+    int fd_dae_RD;
     // ========= Monitoring client =========
 	while (alive) {
-        int fd_dae_RD = open(to_daemon_fp, O_RDWR);
+        fd_dae_RD = open(to_daemon_fp, O_RDWR);
         if (fd_dae_RD < 0) {
             perror("Failed to open FIFO to/from client");
             return 1;
@@ -392,7 +393,6 @@ int run_daemon(char * buffer) {
             if (st == -1) {
                 return -1;
             } else if (st == Disconnect) {
-                close(fd_dae_RD);
                 break;
             }
 
@@ -400,6 +400,7 @@ int run_daemon(char * buffer) {
         close(fd_dae_RD);
 	}
 
+    close(fd_dae_RD);
     if (unlink(to_daemon_fp) != 0) {
         perror("Cannot close to_daemon_fp");
     }
