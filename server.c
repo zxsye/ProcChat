@@ -1,9 +1,10 @@
 #include "server.h"
+
+#include <signal.h>
 #include <stdint.h>
 #include <stdio.h> 
 #include <stdlib.h> 
 #include <string.h>
-#include <signal.h>
 
 #include <dirent.h> // for directory reading
 
@@ -11,7 +12,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/wait.h>
-// #include <sys/select.h>
+#include <sys/select.h>
 
 #include <errno.h>
 #include <fcntl.h>
