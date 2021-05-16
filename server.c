@@ -182,8 +182,8 @@ int domain_broadcast(char * msg, Pipeline * pline) {
 /*
 Takes in buffer for maximum 2048 characters.
 */
-int do_say(char * msg, Pipeline * pline) {
-    if (get_type(msg) != Say) {
+int do_say(char * in_mail, Pipeline * pline) {
+    if (get_type(in_mail) != Say) {
             fprintf(stderr, "Failed do_saycount:\n");
             return -1;
         }
@@ -192,7 +192,7 @@ int do_say(char * msg, Pipeline * pline) {
     set_type(draft, Receive);
 
     strcpy(draft + 2, pline->iden); // To remove _RD
-    strcpy(draft + 2 + 256, SAY_MSG_INDEX(msg));
+    strcpy(draft + 2 + 256, SAY_MSG_INDEX(in_mail));
 
     domain_broadcast(draft, pline);
     return 0;
@@ -477,7 +477,7 @@ int main() {
                     break;
 
                 } else if (dae == Disconnect) {
-                    perror("Disconnecting");
+                    // perror("Disconnecting");
                     pid_t ppid = getppid();
                     kill(ppid, SIGUSR1);
                     return 0;
