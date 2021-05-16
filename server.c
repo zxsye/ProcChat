@@ -401,12 +401,12 @@ int run_daemon(char * buffer) {
 	}
 
     close(fd_dae_RD);
-    if (unlink(to_daemon_fp) != 0) {
-        perror("Cannot close to_daemon_fp");
-    }
-    if (unlink(to_client_fp) != 0) {
-        perror("Cannot close to_client_fp");
-    }
+    // if (unlink(to_daemon_fp) != 0) {
+    //     perror("Cannot close to_daemon_fp");
+    // }
+    // if (unlink(to_client_fp) != 0) {
+    //     perror("Cannot close to_client_fp");
+    // }
     return Disconnect;
 }
 
@@ -478,9 +478,9 @@ int main() {
 
 	}
 
-    if (unlink("gevent") != 0) {
-        perror("Cannot close gevent");
-    }
+    // if (unlink("gevent") != 0) {
+    //     perror("Cannot close gevent");
+    // }
     perror("Terminating...");
 	return 0;
 }
