@@ -3,6 +3,7 @@
 #include <stdio.h> 
 #include <stdlib.h> 
 #include <string.h>
+#include <signal.h>
 
 #include <dirent.h> // for directory reading
 
@@ -398,13 +399,13 @@ int run_daemon(char * buffer) {
 		}
         close(fd_dae_RD);
 	}
-    
-    // close(fd_dae_WR);
 
- 
     return 1;
 }
 
+void handle_suicide(int signum) {
+    wait(NULL);
+}
 /* Gevent monitor
 */
 int main() {
@@ -461,10 +462,8 @@ int main() {
                     break;
 
                 } else if (dae == Disconnect) {
-                    if (unlink("gevent") != 0) {
-                        perror("Cannot close gevent");
-                    }
-                    // perror("Terminating...");
+                    pid_t ppid = getppid();
+                    kill(ppid, SIGUSR1);
                     return 0;
 
                 } else if (dae == -1) {
