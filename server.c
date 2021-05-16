@@ -97,7 +97,7 @@ void prep_connect_str(char * buffer, char * domain, char * iden,
 
 int send_to_client(char * msg, Pipeline * pline) {
     int ret = 0;
-    int fd = open(pline->to_client_fp, O_WRONLY);
+    int fd = open(pline->to_client_fp, O_RDWR);
 
     if (fd < 0) {
         fprintf(stderr, "send_to_client: cannot open %s\n", pline->to_client_fp);
@@ -112,111 +112,25 @@ int send_to_client(char * msg, Pipeline * pline) {
 
 /*  Relays <RECEIVE IDENTIFIER MSG> to client */
 int do_receive(char * buffer, Pipeline * pline) {
-    if (get_type(buffer) != Receive) {
-        return -1;
-    }
+    if (get_type(buffer) != Receive) return -1;
     
     int ret = send_to_client(buffer, pline);
-    if (ret == -1) {
-        fprintf(stderr, "do_receive: cannot write()\n");
-        fprintf(stderr, "Target: %s\n", pline->to_client_fp);
-        fprintf(stderr, "Identifer: %s\n", buffer + 2);
-        fprintf(stderr, "Msg: %s\n\n", buffer + 2 + 256);
-        return -1;
-    }
+    if (ret == -1) return -1;
 
     return 0;
 }
 
 /*  Relays <RECEIVE IDENTIFIER MSG> to client */
 int do_recvcont(char * buffer, Pipeline * pline) {
-    if (get_type(buffer) != Recvcont) { 
-        return -1;
-    }
+    if (get_type(buffer) != Recvcont) return -1;
 
-    int fd = open(pline->to_client_fp, O_WRONLY);
-    if (fd < 0) {
-        fprintf(stderr, "do_receive: cannot open %s\n", pline->to_client_fp);
-        return -1;
-    }
-
-    if (write(fd, buffer, 2048) < 0) {
-        fprintf(stderr, "do_receive: cannot write()\n");
-    }
-    close(fd);
+    int ret = send_to_client(buffer, pline);
+    if (ret == -1) return -1;
 
     return 0;
 }
 
-
-/*
-Takes in buffer for maximum 2048 characters.
-*/
-int do_say(char * buffer, Pipeline * pline) {
-    // Find all other client handlers in current domain
-    struct dirent *de;              // Pointer for directory entry
-    DIR *dr = opendir(pline->domain);      // opendir() returns a pointer of DIR type. 
-  
-    if (dr == NULL) { // opendir returns NULL if couldn't open directory
-        perror("do_say: Could not open current directory" );
-        return -1;
-    }
-  
-    while ((de = readdir(dr)) != NULL) {
-        
-        char * filename = de->d_name;
-        long filenm_len = strlen(filename);
-        if (strlen(filename) <= 2) {
-            continue;
-        }
-        
-        // Directly write to other client handlers (WR)
-        if (filename[filenm_len - 2] == 'W' && filename[filenm_len - 1] == 'R') {
-
-            char pipepath[BUF_SIZE];
-            strcpy(pipepath, pline->domain);
-            strcat(pipepath, "/");
-            strcat(pipepath, filename);
-
-            // Skip write pipes to own client
-            if ( strcmp(pipepath, pline->to_daemon_fp) == 0 ) continue;
-
-            // Build RECEIVE message: RECEIVE <identifier> <message>
-            char draft[BUF_SIZE] = {0};
-            set_type(draft, Receive);
-
-            strcpy(draft + 2, pline->iden); // To remove _RD
-            strcpy(draft + 2 + 256, SAY_MSG_INDEX(buffer));
-
-            // Write to other clients
-            int fd = open(pipepath, O_WRONLY);
-            if (fd < 0) {
-                perror("do_say: Error in piping message to other clients");
-                return -1;
-            }
-            if (write(fd, draft, 2048) < -1) {
-                perror("Failed writing");
-            }
-            close(fd);
-            
-        }
-    }
-
-    closedir(dr);
-    return 0;
-}
-
-/*
-Takes in buffer for maximum 2048 characters.
-*/
-int do_saycount(char * msg, Pipeline * pline) {
-
-
-    if (get_type(msg) != Saycount) {
-        fprintf(stderr, "Failed do_saycount:\n");
-        return -1;
-    }
-
+int domain_broadcast(char * msg, Pipeline * pline) {
     // Find all other client handlers in current domain
     struct dirent *de;              // Pointer for directory entry
     DIR *dr = opendir(pline->domain);      // opendir() returns a pointer of DIR type. 
@@ -247,14 +161,6 @@ int do_saycount(char * msg, Pipeline * pline) {
                 continue;
             }
 
-            // Build RECEIVE message: RECEIVE <identifier> <message>
-            char draft[BUF_SIZE] = {0};
-            set_type(draft, Recvcont);
-
-            strcpy(draft + 2, pline->iden); // To remove _RD
-            strcpy(draft + 2 + 256, SAY_MSG_INDEX(msg));
-
-            draft[BUF_SIZE - 1] = msg[BUF_SIZE - 1]; // terminating character
 
             // Write to other clients
             int fd = open(pipepath, O_WRONLY);
@@ -262,7 +168,7 @@ int do_saycount(char * msg, Pipeline * pline) {
                 perror("do_say: Error in piping message to other clients");
                 return -1;
             }
-            if (write(fd, draft, 2048) < 0) {
+            if (write(fd, msg, 2048) < 0) {
                 perror("Failed writing");
             }
             close(fd);
@@ -270,9 +176,49 @@ int do_saycount(char * msg, Pipeline * pline) {
         }
     }
     closedir(dr);
+    return 0;
+}
+
+/*
+Takes in buffer for maximum 2048 characters.
+*/
+int do_say(char * buffer, Pipeline * pline) {
+
+
+    char draft[BUF_SIZE] = {0};
+    set_type(draft, Receive);
+
+    strcpy(draft + 2, pline->iden); // To remove _RD
+    strcpy(draft + 2 + 256, SAY_MSG_INDEX(buffer));
+
+    domain_broadcast(draft, pline);
+    return 0;
+}
+
+/*
+Takes in buffer for maximum 2048 characters.
+*/
+int do_saycount(char * msg, Pipeline * pline) {
+    if (get_type(msg) != Saycount) {
+        fprintf(stderr, "Failed do_saycount:\n");
+        return -1;
+    }
+
+    // Build RECEIVE message: RECEIVE <identifier> <message>
+    char draft[BUF_SIZE] = {0};
+    set_type(draft, Recvcont);
+
+    strcpy(draft + 2, pline->iden); // To remove _RD
+    strcpy(draft + 2 + 256, SAY_MSG_INDEX(msg));
+
+    draft[BUF_SIZE - 1] = msg[BUF_SIZE - 1]; // terminating character
+
+    // Broadcast
+    domain_broadcast(msg, pline);
 
     return 0;
 }
+
 
 /*  Relays <RECEIVE IDENTIFIER MSG> to client */
 int do_ping(char * ping, Pipeline * pline) {
@@ -377,13 +323,14 @@ int run_daemon(char * buffer) {
 
 
     struct timeval timeout;
-    timeout.tv_sec = 15;
+    timeout.tv_sec = 8;
     timeout.tv_usec = 0;
 
     int client_alive = 1;
 
     // ========= Monitoring client =========
 	while (1) {
+        // perror("monitor");
         int fd_dae_RD = open(to_daemon_fp, O_RDWR);
         if (fd_dae_RD < 0) {
             perror("Failed to open FIFO to/from client");
@@ -398,8 +345,9 @@ int run_daemon(char * buffer) {
 		FD_ZERO(&allfds); //   000000
 		FD_SET(fd_dae_RD, &allfds); // 100000
 		
+        // printf("Waiting for sec: %ld\nµs: %d\n", timeout.tv_sec, timeout.tv_usec);
 		int select_ret = select(maxfd, &allfds, NULL, NULL, &timeout);
-
+        // printf("Remaining for sec: %ld\nµs: %d\n", timeout.tv_sec, timeout.tv_usec);
         // ======= NEW UPDATE =======
 		if (select_ret < 0) {
             close(fd_dae_RD);
@@ -408,43 +356,49 @@ int run_daemon(char * buffer) {
 
 		} else if (select_ret == 0) {
             // Timer expired
-            perror("timer expired");
+            // perror("timer expired");
             close(fd_dae_RD);
 
             if (client_alive) {
                 // Pong was received
-                timeout.tv_sec = 15;
+                timeout.tv_sec = 8;
                 timeout.tv_usec = 0;
                 client_alive = 0;
 
                 // Send new ping
                 char ping[BUF_SIZE] ={0};
                 *(short*)ping = Ping;
+                perror("Sending ping");
                 daemon_protocol(ping, &pline);
+                perror("Sent ping");
 
             } else if (!client_alive) {
                 // Pong not received
+                // perror("Pong not received");
                 break;
             }
-        }
+        } else {
+            // Read new client update
+            char buffer[BUF_SIZE];
+            int nread = read(fd_dae_RD, buffer, BUF_SIZE);
+            close(fd_dae_RD);
 
-        // Read new client update
-        char buffer[BUF_SIZE];
-        int nread = read(fd_dae_RD, buffer, BUF_SIZE);
-        close(fd_dae_RD);
-        if (nread == -1) {
-            perror("Failed to read");
-            return -1;
-        }
+            if (nread == -1) {
+                perror("Failed to read");
+                return -1;
+            }
 
-        // Handle update
-        int dp = daemon_protocol(buffer, &pline);
-        if (dp == -1) {
-            return -1;
-        } else if ( dp == Pong ) {
-            client_alive = 1;
-        } else if ( dp == Disconnect) {
-            break;
+            // Handle update
+            int dp = daemon_protocol(buffer, &pline);
+            if (dp == -1) {
+                return -1;
+            } else if ( dp == Pong ) {
+                perror("\nRESET");
+                client_alive = 1;
+            } else if ( dp == Disconnect) {
+                break;
+            }
+
         }
 
 	}

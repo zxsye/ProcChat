@@ -50,7 +50,7 @@ int main() {
         return 1;
     }
 
-    char msg[BUF_SIZE];
+    char msg[BUF_SIZE] = {0};
     msg[1] = 0;
     msg[0] = 0;
     strcpy(msg + 2, "friday");
@@ -58,77 +58,78 @@ int main() {
 
     write(gevent_fd, msg, 2048);
 
-    // Connect june
-    sleep(1);
-    msg[1] = 0;
-    msg[0] = 0;
-    strcpy(msg + 2, "sunday");
-    strcpy(msg + 2 + 256, "april");
+    // // Connect june
+    // sleep(0);
+    // msg[1] = 0;
+    // msg[0] = 0;
+    // strcpy(msg + 2, "sunday");
+    // strcpy(msg + 2 + 256, "april");
 
-    write(gevent_fd, msg, 2048);
+    // write(gevent_fd, msg, 2048);
 
     // SAY
-    sleep(1);
     int wr = open("april/friday_WR", O_WRONLY);
-    msg[1] = 0;
-    msg[0] = Say;
-    strcpy(msg + 2, "what's up doc?");
+    // msg[1] = 0;
+    // msg[0] = Say;
+    // strcpy(msg + 2, "what's up doc?");
 
+    // write(wr, msg, 2048);
+
+    // // RECEIVE
+    // sleep(1);
+    // for (int i = 0; i < sizeof(msg); i++) {
+    //     msg[i] = 0;
+    // }
+
+    // printf("\nClient trying to receive...\n");
+
+    // int rd = open("april/sunday_RD", O_RDONLY);
+    // if (rd < 0) {
+    //     perror("cannot open sunday_rd");
+    // }
+    // printf("opened sunday_RD\n");
+
+    
+    // if (read(rd, msg, sizeof(msg)) < 0) {
+    //     perror("cannot read");
+    // }
+    // printf("[ april/sunday receieved ]\n");
+    
+    // printf("Type: %d %d\n", msg[0], msg[1]);
+    // printf("From: %s\n", msg + 2);
+    // printf("Message: %s\n", msg + 2 + 256);
+
+    // // SAY
+    // sleep(0);
+    // msg[1] = 0;
+    // msg[0] = Saycount;
+    // strcpy(msg + 2, "what's up peepee?");
+    // msg[2047] = -1;
+    // write(wr, msg, 2048);
+
+    // // RECEIVE
+    // sleep(0);
+
+    // printf("\nClient trying to receive...\n");
+    
+    // if (read(rd, msg, sizeof(msg)) < 0) {
+    //     perror("cannot read");
+    // }
+    // printf("[ april/sunday receieved ]\n");
+    
+    // printf("Type: %d %d\n", msg[0], msg[1]);
+    // printf("From: %s\n", msg + 2);
+    // printf("Message: %s\n", msg + 2 + 256);
+
+    // SEND PONG
+    sleep(4);
+    *(short*)msg = Pong;
     write(wr, msg, 2048);
-
-    // RECEIVE
-    sleep(1);
-    for (int i = 0; i < sizeof(msg); i++) {
-        msg[i] = 0;
-    }
-
-    printf("\nClient trying to receive...\n");
-
-    int rd = open("april/sunday_RD", O_RDONLY);
-    if (rd < 0) {
-        perror("cannot open sunday_rd");
-    }
-    printf("opened sunday_RD\n");
-
-    
-    if (read(rd, msg, sizeof(msg)) < 0) {
-        perror("cannot read");
-    }
-    printf("[ april/sunday receieved ]\n");
-    
-    printf("Type: %d %d\n", msg[0], msg[1]);
-    printf("From: %s\n", msg + 2);
-    printf("Message: %s\n", msg + 2 + 256);
-
-    // SAY
-    sleep(1);
-    msg[1] = 0;
-    msg[0] = Saycount;
-    strcpy(msg + 2, "what's up doc?");
-    msg[2047] = -1;
-    write(wr, msg, 2048);
-
-    // RECEIVE
-    sleep(1);
-    for (int i = 0; i < sizeof(msg); i++) {
-        msg[i] = 0;
-    }
-
-    printf("\nClient trying to receive...\n");
-    
-    if (read(rd, msg, sizeof(msg)) < 0) {
-        perror("cannot read");
-    }
-    printf("[ april/sunday receieved ]\n");
-    
-    printf("Type: %d %d\n", msg[0], msg[1]);
-    printf("From: %s\n", msg + 2);
-    printf("Message: %s\n", msg + 2 + 256);
 
     // CLOSING EVERYTHING
     close(gevent_fd);
     close(wr);
-    close(rd);
+    // close(rd);
 
     return 0;
 }
