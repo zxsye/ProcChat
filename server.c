@@ -399,7 +399,7 @@ int run_daemon(char * buffer) {
 		FD_SET(fd_dae_RD, &allfds); // 100000
 		
 		int select_ret = select(maxfd, &allfds, NULL, NULL, &timeout);
-        
+
         // ======= NEW UPDATE =======
 		if (select_ret < 0) {
             close(fd_dae_RD);
@@ -520,6 +520,7 @@ int main() {
                     break;
 
                 } else if (dae == Disconnect) {
+                    perror("Disconnecting");
                     pid_t ppid = getppid();
                     kill(ppid, SIGUSR1);
                     return 0;

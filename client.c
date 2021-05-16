@@ -84,7 +84,7 @@ int main() {
 
     printf("\nClient trying to receive...\n");
 
-    int rd = open("april/sunday_RD", O_NONBLOCK, O_RDONLY);
+    int rd = open("april/sunday_RD", O_RDONLY);
     if (rd < 0) {
         perror("cannot open sunday_rd");
     }
@@ -99,10 +99,6 @@ int main() {
     printf("Type: %d %d\n", msg[0], msg[1]);
     printf("From: %s\n", msg + 2);
     printf("Message: %s\n", msg + 2 + 256);
-
-    for (int i = 0; i < sizeof(msg); i++) {
-        printf("%c ", msg[i]);
-    }
 
     // SAY
     sleep(1);
@@ -128,10 +124,6 @@ int main() {
     printf("Type: %d %d\n", msg[0], msg[1]);
     printf("From: %s\n", msg + 2);
     printf("Message: %s\n", msg + 2 + 256);
-
-    for (int i = 0; i < sizeof(msg); i++) {
-        printf("%c ", msg[i]);
-    }
 
     // CLOSING EVERYTHING
     close(gevent_fd);
