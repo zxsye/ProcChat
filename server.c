@@ -464,8 +464,8 @@ int main() {
                     if (unlink("gevent") != 0) {
                         perror("Cannot close gevent");
                     }
-                    perror("Terminating...");
-                    break;
+                    // perror("Terminating...");
+                    return 0;
 
                 } else if (dae == -1) {
                     perror("run_daemon crashed");
