@@ -386,10 +386,10 @@ int run_daemon(char * buffer) {
             } else if (st == Disconnect) {
                 close(fd_dae_RD);
                 if (unlink(to_daemon_fp) == 0) {
-                    printf("FIFO deleted.\n");
+                    // printf("FIFO deleted.\n");
                 }
                 if (unlink(to_client_fp) == 0) {
-                    perror("to_client_fp FIFO closed");
+                    // perror("to_client_fp FIFO closed");
                 }
                 return Disconnect;
             }
@@ -399,7 +399,7 @@ int run_daemon(char * buffer) {
 	}
     
     // close(fd_dae_WR);
-    
+
  
     return 1;
 }
@@ -460,7 +460,7 @@ int main() {
                     break;
                 } else if (dae == Disconnect) {
                     if (unlink("gevent") == 0) {
-                        perror("gevent FIFO closed");
+                        // perror("gevent FIFO closed");
                     }
                     break;
                 } else if (dae == -1) {
