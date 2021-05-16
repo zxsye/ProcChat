@@ -56,31 +56,27 @@ enum type {
 };
 
 typedef struct pipeline {
-    char * domain;
-    char * iden;
-    char * to_client_fp;
-    char * to_daemon_fp;
+    char domain[DOMAIN_LEN];
+    char iden[IDEN_LEN];
+    char to_client_fp[BUF_SIZE];
+    char to_daemon_fp[BUF_SIZE];
 } Pipeline;
 
-void prep_connect_str(char * buffer, char * domain, char * iden, 
-                      char * to_client_fp, char * to_daemon_fp, Pipeline * pline) {
+/*  Takes in "Connect" type message and converts to filepath string to open pipes
+ */
+void get_filepath(char * buffer, Pipeline * pline) {
 
-    strncpy(domain, GET_DOMAIN(buffer), DOMAIN_LEN); 
-    strcpy(iden, IDEN(buffer));
+    strncpy(pline->domain, GET_DOMAIN(buffer), DOMAIN_LEN); 
+    strcpy(pline->iden, IDEN(buffer));
 
-    strcpy(to_client_fp, domain);                       // domain
-    strcat(to_client_fp, "/");                          // domain/
-    strcat(to_client_fp, iden);                         // domain/identifier
+    strcpy(pline->to_client_fp, pline->domain);                       // domain
+    strcat(pline->to_client_fp, "/");                          // domain/
+    strcat(pline->to_client_fp, pline->iden);                         // domain/identifier
 
-    strcpy(to_daemon_fp, to_client_fp);                 // domain/identifier
+    strcpy(pline->to_daemon_fp, pline->to_client_fp);                 // domain/identifier
 
-    strcat(to_daemon_fp, "_WR");                        // domain/identifier_WR
-    strcat(to_client_fp, "_RD");                        // domain/identifier_RD
-
-    pline->domain = domain;
-    pline->iden = iden;
-    pline->to_client_fp = to_client_fp;
-    pline->to_daemon_fp = to_daemon_fp;
+    strcat(pline->to_daemon_fp, "_WR");                        // domain/identifier_WR
+    strcat(pline->to_client_fp, "_RD");                        // domain/identifier_RD
 
 }
 
@@ -267,12 +263,11 @@ int daemon_protocol(char * buffer, Pipeline * pline) {
 }
 
 /*
-Takes in fd for gevent, reads latest message from pipe to construct new pipes for client.
+Takes in gevent buffer to construct daemon and FIFOs to handle new client.
+After successful construction begin running client handler.
 
-- Return -1: tell parent failure
-- Return 0: tell parent of birth success 
-- Return 1: tell child's main of suicide
-- Return 2: 
+- Return -1: daemon has failed
+- Return DISCONNECT: daemon disconnected
 
 */
 int run_daemon(char * buffer) {
@@ -283,16 +278,15 @@ int run_daemon(char * buffer) {
     }
 
     // Make domain
-    char domain[DOMAIN_LEN];
-    char iden[IDEN_LEN];
-    char to_client_fp[BUF_SIZE];
-    char to_daemon_fp[BUF_SIZE];
     Pipeline pline;
-
-    prep_connect_str(buffer, domain, iden, to_client_fp, to_daemon_fp, &pline);
+    // char domain[DOMAIN_LEN];
+    // char iden[IDEN_LEN];
+    // char to_client_fp[BUF_SIZE];
+    // char to_daemon_fp[BUF_SIZE];
+    get_filepath(buffer, &pline);
 
     // Make domain directory
-    if ( -1 == mkdir(domain, 0777) ) {
+    if ( -1 == mkdir(pline.domain, 0777) ) {
         if (errno == EEXIST) 
             errno = 0;
         else {
@@ -302,30 +296,28 @@ int run_daemon(char * buffer) {
     }
 
     // Starting FIFO
-    if ( mkfifo(to_client_fp, 0777) == -1 ) {
+    if ( mkfifo(pline.to_client_fp, 0777) == -1 ) {
         perror("Cannot make pipe to client");
         errno = 0;
         return -1;
     }
-    if ( mkfifo(to_daemon_fp, 0777) == -1 ) {
+    if ( mkfifo(pline.to_daemon_fp, 0777) == -1 ) {
         perror("Cannot make pipe to daemon");
         errno = 0;
         return -1;
     }
 
+    int client_alive = 1;
     struct timeval timeout;
     timeout.tv_sec = PPTIME;
     timeout.tv_usec = 0;
 
-    int client_alive = 1;
-
     // ========= Monitoring client =========
 	while (1) {
-        // perror("monitor");
-        int fd_dae_RD = open(to_daemon_fp, O_RDWR);
+        int fd_dae_RD = open(pline.to_daemon_fp, O_RDWR);
         if (fd_dae_RD < 0) {
             perror("Failed to open FIFO to/from client");
-            return 1;
+            break;
         }
         
         // Reading from client
@@ -336,67 +328,58 @@ int run_daemon(char * buffer) {
 		FD_ZERO(&allfds); //   000000
 		FD_SET(fd_dae_RD, &allfds); // 100000
 		
-        // printf("Waiting for sec: %ld\nµs: %d\n", timeout.tv_sec, timeout.tv_usec);
 		int select_ret = select(maxfd, &allfds, NULL, NULL, &timeout);
-        // printf("Remaining for sec: %ld\nµs: %d\n", timeout.tv_sec, timeout.tv_usec);
+
         // ======= NEW UPDATE =======
 		if (select_ret < 0) {
             close(fd_dae_RD);
-			fprintf(stderr, "Error from select");
+            perror("run_daemon: Failed select");
             continue;
 
-		} else if (select_ret == 0) {
-            // Timer expired
-            // perror("timer expired");
+		} else if (select_ret == 0 && client_alive) {
             close(fd_dae_RD);
 
-            if (client_alive) {
-                // Pong was received
-                timeout.tv_sec = PPTIME;
-                timeout.tv_usec = 0;
-                client_alive = 0;
+            // Pong was received
+            timeout.tv_sec = PPTIME;
+            timeout.tv_usec = 0;
+            client_alive = 0;
 
-                // Send new ping
-                char ping[BUF_SIZE] ={0};
-                *(short*)ping = Ping;
-                perror("Sending ping");
-                daemon_protocol(ping, &pline);
-                perror("Sent ping");
+            // Send new ping
+            char ping_draft[BUF_SIZE] ={0};
+            *(short*)ping_draft = Ping;
+            daemon_protocol(ping_draft, &pline);
+            continue;
 
-            } else if (!client_alive) {
-                // Pong not received
-                // perror("Pong not received");
-                break;
-            }
-        } else {
-            // Read new client update
-            char buffer[BUF_SIZE];
-            int nread = read(fd_dae_RD, buffer, BUF_SIZE);
+        } else if (select_ret == 0 && !client_alive) {
             close(fd_dae_RD);
+            break;
+        }
 
-            if (nread == -1) {
-                perror("Failed to read");
-                return -1;
-            }
+        // Read new client update
+        char buffer[BUF_SIZE];
+        int nread = read(fd_dae_RD, buffer, BUF_SIZE);
+        close(fd_dae_RD);
 
-            // Handle update
-            int dp = daemon_protocol(buffer, &pline);
-            if (dp == -1) {
-                return -1;
-            } else if ( dp == Pong ) {
-                perror("\nRESET");
-                client_alive = 1;
-            } else if ( dp == Disconnect) {
-                break;
-            }
+        if (nread == -1) {
+            perror("Failed to read");
+            return -1;
+        }
 
+        // Handle update
+        int dp = daemon_protocol(buffer, &pline);
+        if (dp == -1) {
+            return -1;
+        } else if ( dp == Pong ) {
+            client_alive = 1;
+        } else if ( dp == Disconnect) {
+            break;
         }
 
 	}
 
-    if (unlink(to_daemon_fp) != 0)
+    if (unlink(pline.to_daemon_fp) != 0)
         perror("Cannot close to_daemon_fp");
-    if (unlink(to_client_fp) != 0)
+    if (unlink(pline.to_client_fp) != 0)
         perror("Cannot close to_client_fp");
     return Disconnect;
 }
