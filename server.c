@@ -32,10 +32,17 @@
 #define IDEN_LEN 256    // max = 255 char with 1 for null byte
 #define DOMAIN_LEN 256  // max = 255 char with 1 for null byte
 
-#define RECEIVE_MSG_INDEX(draft) (draft + 2 + 256)
-#define RECEIVE_ID_INDEX(draft) (draft + 2)
-#define SAY_MSG_INDEX(draft) (draft + 2)
-#define FILEPATH_TO_IDEN(filepath, domain) (filepath + strlen(domain) + 1)
+#define PPTIME 15
+
+#define SAY_MSG_INDEX(draft) (draft + TYPE_LEN)
+#define RECEIVE_ID_INDEX(draft) (draft + TYPE_LEN)
+#define RECEIVE_MSG_INDEX(draft) (draft + TYPE_LEN + IDEN_LEN)
+
+#define GET_TYPE(string) (*(short*)string)
+#define SET_TYPE(string, t) (*(short*)string = t)
+
+#define IDEN(string) (string + IDEN_IX)
+#define GET_DOMAIN(string) (string + DOMAIN_IX)
 
 enum type {
     Connect = 0,
@@ -48,14 +55,6 @@ enum type {
     Pong = 6
 };
 
-enum type get_type(char * string) {
-    return *(short*)string;
-}
-
-void set_type(char * string, enum type t) {
-    *(short*)string = t;
-}
-
 typedef struct pipeline {
     char * domain;
     char * iden;
@@ -63,21 +62,11 @@ typedef struct pipeline {
     char * to_daemon_fp;
 } Pipeline;
 
-// Return pointer to first character of "identifier"
-char * get_iden(char * string) {
-    // Only 256 characters !
-    return string + IDEN_IX;
-}
-
-// Return pointer to first character of the "domain"
-char * get_domain(char * string) {
-    return string + DOMAIN_IX;
-}
-
 void prep_connect_str(char * buffer, char * domain, char * iden, 
                       char * to_client_fp, char * to_daemon_fp, Pipeline * pline) {
-    strncpy(domain, get_domain(buffer), DOMAIN_LEN); 
-    strcpy(iden, get_iden(buffer));
+
+    strncpy(domain, GET_DOMAIN(buffer), DOMAIN_LEN); 
+    strcpy(iden, IDEN(buffer));
 
     strcpy(to_client_fp, domain);                       // domain
     strcat(to_client_fp, "/");                          // domain/
@@ -112,7 +101,7 @@ int send_to_client(char * msg, Pipeline * pline) {
 
 /*  Relays <RECEIVE IDENTIFIER MSG> to client */
 int do_receive(char * buffer, Pipeline * pline) {
-    if (get_type(buffer) != Receive) return -1;
+    if (GET_TYPE(buffer) != Receive) return -1;
     
     int ret = send_to_client(buffer, pline);
     if (ret == -1) return -1;
@@ -122,7 +111,7 @@ int do_receive(char * buffer, Pipeline * pline) {
 
 /*  Relays <RECEIVE IDENTIFIER MSG> to client */
 int do_recvcont(char * buffer, Pipeline * pline) {
-    if (get_type(buffer) != Recvcont) return -1;
+    if (GET_TYPE(buffer) != Recvcont) return -1;
 
     int ret = send_to_client(buffer, pline);
     if (ret == -1) return -1;
@@ -183,13 +172,13 @@ int domain_broadcast(char * msg, Pipeline * pline) {
 Takes in buffer for maximum 2048 characters.
 */
 int do_say(char * in_mail, Pipeline * pline) {
-    if (get_type(in_mail) != Say) {
+    if (GET_TYPE(in_mail) != Say) {
             fprintf(stderr, "Failed do_saycount:\n");
             return -1;
         }
 
     char draft[BUF_SIZE] = {0};
-    set_type(draft, Receive);
+    SET_TYPE(draft, Receive);
 
     strcpy(draft + 2, pline->iden); // To remove _RD
     strcpy(draft + 2 + 256, SAY_MSG_INDEX(in_mail));
@@ -202,14 +191,14 @@ int do_say(char * in_mail, Pipeline * pline) {
 Takes in buffer for maximum 2048 characters.
 */
 int do_saycount(char * in_mail, Pipeline * pline) {
-    if (get_type(in_mail) != Saycount) {
+    if (GET_TYPE(in_mail) != Saycount) {
         fprintf(stderr, "Failed do_saycount:\n");
         return -1;
     }
 
     // Build RECEIVE message: RECEIVE <identifier> <message>
     char draft[BUF_SIZE] = {0};
-    set_type(draft, Recvcont);
+    SET_TYPE(draft, Recvcont);
 
     strcpy(draft + 2, pline->iden); // To remove _RD
     strcpy(draft + 2 + 256, SAY_MSG_INDEX(in_mail));
@@ -225,7 +214,7 @@ int do_saycount(char * in_mail, Pipeline * pline) {
 
 /*  Relays <RECEIVE IDENTIFIER MSG> to client */
 int do_ping(char * ping, Pipeline * pline) {
-    if (get_type(ping) != Ping) {
+    if (GET_TYPE(ping) != Ping) {
         return -1;
     }
     
@@ -242,34 +231,34 @@ Otherwise return the message type.
 */
 int daemon_protocol(char * buffer, Pipeline * pline) {
     // Check message type
-    if (get_type(buffer) == Say) {
+    if (GET_TYPE(buffer) == Say) {
         if ( -1 == do_say(buffer, pline) ) {
             perror("Failed do_say");
             return -1;
         }
-    } else if (get_type(buffer) == Saycount) {
+    } else if (GET_TYPE(buffer) == Saycount) {
         if ( -1 == do_saycount(buffer, pline) ) {
             perror("Failed do_say");
             return -1;
         }
-    } else if ( get_type(buffer) == Receive) {
+    } else if ( GET_TYPE(buffer) == Receive) {
         if ( -1 == do_receive(buffer, pline) ) {
             perror("Failed to do_receive");
             return -1;
         }
-    } else if ( get_type(buffer) == Recvcont) {
+    } else if ( GET_TYPE(buffer) == Recvcont) {
         if ( -1 == do_recvcont(buffer, pline) ) {
             perror("Failed do_recvcont");
             return -1;
         }
-    } else if ( get_type(buffer) == Ping) {
+    } else if ( GET_TYPE(buffer) == Ping) {
         if ( -1 == do_ping(buffer, pline) ) {
             perror("Failed do_ping");
             return -1;
         }
-    } else if ( get_type(buffer) == Pong) {
+    } else if ( GET_TYPE(buffer) == Pong) {
         return Pong;
-    } else if ( get_type(buffer) == Disconnect) {
+    } else if ( GET_TYPE(buffer) == Disconnect) {
         return Disconnect;
     } else {
         fprintf(stderr, "Message is incorrect");
@@ -288,7 +277,7 @@ Takes in fd for gevent, reads latest message from pipe to construct new pipes fo
 */
 int run_daemon(char * buffer) {
 
-    if (get_type(buffer) != Connect) {
+    if (GET_TYPE(buffer) != Connect) {
         printf("Type is not connect\n");
         return -1;
     }
@@ -324,9 +313,8 @@ int run_daemon(char * buffer) {
         return -1;
     }
 
-
     struct timeval timeout;
-    timeout.tv_sec = 8;
+    timeout.tv_sec = PPTIME;
     timeout.tv_usec = 0;
 
     int client_alive = 1;
@@ -364,7 +352,7 @@ int run_daemon(char * buffer) {
 
             if (client_alive) {
                 // Pong was received
-                timeout.tv_sec = 8;
+                timeout.tv_sec = PPTIME;
                 timeout.tv_usec = 0;
                 client_alive = 0;
 
@@ -416,19 +404,19 @@ int run_daemon(char * buffer) {
 void handle_suicide(int signum) {
     wait(NULL);
 }
+
 /* Gevent monitor
 */
 int main() {
-	if ((mkfifo("gevent", 0777) < 0)) {
+	if ((mkfifo(CHANNEL_NAME, 0777) < 0)) {
 		perror("Cannot make fifo");
+        return 1;
 	}
-
-    void (*handler)(int) = handle_suicide;
-    signal(SIGUSR1, handler);
+    signal(SIGUSR1, handle_suicide);
 
 	while (1)
 	{
-        int gevent_fd = open("gevent", O_RDWR);
+        int gevent_fd = open(CHANNEL_NAME, O_RDWR);
         if (gevent_fd < 0) {
             perror("Failed to open gevent FD");
             return 1;
@@ -441,56 +429,50 @@ int main() {
 		FD_ZERO(&allfds); //   000000
 		FD_SET(gevent_fd, &allfds); // 100000
         
-		timeout.tv_sec = 2;
+		timeout.tv_sec = PPTIME;
 		timeout.tv_usec = 0;
 		timeout = timeout;
 
 		int ret = select(maxfd, &allfds, NULL, NULL, NULL);
-
-		if (-1 == ret) {
-				
-		} else if (0 == ret) {
-			perror("Nothing to report");
-
-		} else if (FD_ISSET(gevent_fd, &allfds)) {
-			// Start reading
-            char buffer[BUF_SIZE];
-            ssize_t nread = read(gevent_fd, buffer, sizeof(buffer));
-            if (nread == -1) {
-                printf("Failed to read\n");
-                return -1;
-            }
+		if (ret <= 0 || !FD_ISSET(gevent_fd, &allfds)) {
             close(gevent_fd);
-
-            // ========== FORKING =========== //
-            pid_t pid = fork();
-
-            if (pid < 0) {
-                printf("Could not fork\n");
-                return -1;
-            }
-
-            if (pid == 0) {
-                int dae = run_daemon(buffer);
-
-                if (dae == 1) {
-                    break;
-
-                } else if (dae == Disconnect) {
-                    // perror("Disconnecting");
-                    pid_t ppid = getppid();
-                    kill(ppid, SIGUSR1);
-                    return 0;
-
-                } else if (dae == -1) {
-                    perror("run_daemon crashed");
-                    break;
-                    
-                }
-            }
-
+            continue;
 		}
 
+        // Start reading
+        char buffer[BUF_SIZE];
+        ssize_t nread = read(gevent_fd, buffer, sizeof(buffer));
+        
+        if (nread == -1) {
+            printf("Failed to read\n");
+            return -1;
+        }
+        close(gevent_fd);
+
+        // ========== FORKING =========== //
+        pid_t pid = fork();
+
+        if (pid < 0) {
+            printf("Failed fork\n");
+            return -1;
+        } else if (pid != 0) {
+            continue;
+        }
+
+        // ========== CHILD RUN DAEMON ========== //
+        int dae = run_daemon(buffer);
+
+        if (dae == Disconnect) {
+            break;
+        } else if (dae == -1) {
+            perror("run_daemon crashed");
+            break;
+        }
+
 	}
+
+    pid_t ppid = getppid();
+    kill(ppid, SIGUSR1);
+
 	return 0;
 }
