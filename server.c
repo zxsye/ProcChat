@@ -399,7 +399,7 @@ int run_daemon(char * buffer) {
 		FD_SET(fd_dae_RD, &allfds); // 100000
 		
 		int select_ret = select(maxfd, &allfds, NULL, NULL, &timeout);
-        fprintf(stderr, "s: %ld || µs: %d\n", timeout.tv_sec, timeout.tv_usec);
+        fprintf(stderr, "s: %ld || µs: %ld\n", timeout.tv_sec, timeout.tv_usec);
         // ======= NEW UPDATE =======
 		if (select_ret < 0) {
             close(fd_dae_RD);
