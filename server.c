@@ -441,7 +441,7 @@ int main() {
 		int ret = select(maxfd, &allfds, NULL, NULL, NULL);
 
 		if (-1 == ret) {
-			perror("Error from select");	
+				
 		} else if (0 == ret) {
 			perror("Nothing to report");
 
