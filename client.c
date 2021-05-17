@@ -30,13 +30,14 @@ int send(Pipeline * sender, char * message, enum type msg_type, char trm) {
     errno = 0;
     int fd = open(sender->to_daemon_fp, O_WRONLY);
     if (fd <= 0) {
-        printf("open failed for %s\n", sender->to_daemon_fp);
-        perror("");
+        perror("Failed in send()");
+        fprintf(stderr, "open failed for: %s\n", sender->to_daemon_fp);
+        return -1;
     }
 
     if (write(fd, draft, BUF_SIZE) <= 0) {
-        printf("write failed for %s\n", sender->to_daemon_fp);
-        perror("");
+        perror("Failed in send()");
+        fprintf(stderr, "write failed for: %s\n", sender->to_daemon_fp);
     }
     close(fd);
 
@@ -78,14 +79,15 @@ void receive(Pipeline * receiver) {
     errno = 0;
     int fd = open(receiver->to_client_fp, O_RDONLY);
     if (fd <= 0) {
-        printf("open failed for %s\n", receiver->to_client_fp);
-        perror("");
+        perror("receive(): fail open");
+        fprintf(stderr, "open failed for: %s\n", receiver->to_client_fp);
         return;
     }
 
     char msg[BUF_SIZE];
     if (read(fd, msg, BUF_SIZE) <= 0) {
-        printf("receive failed for %s\n", receiver->iden);
+        perror("receive(): failed read");
+        fprintf(stderr, "receive failed for: %s\n", receiver->to_client_fp);
         return;
     }
     close(fd);
@@ -98,6 +100,8 @@ void receive(Pipeline * receiver) {
     CONNECT <identifier> <domain>
  */
 void connect_to_server(Pipeline * pline) {
+    sleep(1);
+
     char draft[BUF_SIZE] = {0};
     SET_TYPE(draft, Connect);
     
@@ -110,10 +114,7 @@ void connect_to_server(Pipeline * pline) {
     write(fd, draft, BUF_SIZE);
     close(fd);
 
-    struct timeval timeout;
-    timeout.tv_sec = 1;
-    timeout.tv_usec = 0;
-    select(0, NULL, NULL, NULL, &timeout);  
+    sleep(1);
 }
 
 

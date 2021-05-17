@@ -13,7 +13,8 @@ do
     outfile+=".out"
 
     # Run test cases
-    ./procchat &
+    ./procchat & 
+    sleep 1 &
     ./$infile | diff - $outfile
 
     # Check test result
@@ -33,7 +34,6 @@ do
         total_test=$((total_test+1))
     fi
 
-    sleep 5
     kill $(ps aux | grep '[p]rocchat' | awk '{print $2}') > /dev/null
     rm gevent
 
