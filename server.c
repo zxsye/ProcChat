@@ -341,13 +341,9 @@ int main() {
 
         int maxfd = gevent_fd + 1;
         fd_set allfds;
-        struct timeval timeout;
 
 		FD_ZERO(&allfds); //   000000
 		FD_SET(gevent_fd, &allfds); // 100000
-        
-		timeout.tv_sec = PPTIME;
-		timeout.tv_usec = 0;
 
 		int ret = select(maxfd, &allfds, NULL, NULL, NULL);
 		if (ret <= 0 || !FD_ISSET(gevent_fd, &allfds)) {

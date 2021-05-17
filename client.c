@@ -106,12 +106,9 @@ void connect_to_server(Pipeline * pline) {
     close(fd);
 
     struct timeval timeout;
-    timeout.tv_sec = 0;
-    timeout.tv_usec = 300 * 1000;
-    select(0, NULL, NULL, NULL, &timeout);
-    // Open reading channel
-    // fd = open(pline->to_daemon_fp, O_WRONLY);
-    // fd = open(pline->to_client_fp, O_RDONLY);    
+    timeout.tv_sec = 1;
+    timeout.tv_usec = 0;
+    select(0, NULL, NULL, NULL, &timeout);  
 }
 
 

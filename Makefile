@@ -11,14 +11,11 @@ procchat: $(SRC) $(HEADERS)
 
 test:
 	make procchat
-# sh compile_tests.sh
+	make compile_tests
 	sh test.sh
+
+compile_tests:
+	sh compile_tests.sh
 
 clean:
 	rm -f procchat
-
-# My testing
-sani:
-	rm client
-	rm server
-	rm gevent
