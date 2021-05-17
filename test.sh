@@ -58,3 +58,4 @@ rm -rf one_multiconnect
 rm -rf one_SAY
 rm -rf one_SAYCONT
 rm -rf one_SAYCONT_int
+rm -rf ping_pong
