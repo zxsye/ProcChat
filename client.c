@@ -1,74 +1,6 @@
 #define _POSIX_SOURCE
 #include "server.h"
 
-#include <signal.h>
-#include <stdint.h>
-#include <stdio.h> 
-#include <stdlib.h> 
-#include <string.h>
-
-#include <dirent.h> // for directory reading
-
-#include <sys/types.h> 
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/wait.h>
-#include <sys/select.h>
-
-#include <errno.h>
-#include <fcntl.h>
-
-#include <unistd.h>
-
-#define BYTE unsigned char
-#define BUF_SIZE (2048)
-#define CHANNEL_NAME ("gevent")
-
-#define TYPE_IX 0
-#define IDEN_IX 2
-#define DOMAIN_IX (2 + 256)
-
-#define TYPE_LEN 2
-#define IDEN_LEN 256    // max = 255 char with 1 for null byte
-#define DOMAIN_LEN 256  // max = 255 char with 1 for null byte
-
-#define PPTIME 15
-
-#define SAY_MSG_INDEX(draft) (draft + TYPE_LEN)
-#define IDEN_INDEX(draft) (draft + TYPE_LEN)
-#define DOMAIN_INDEX(draft) (draft + TYPE_LEN + IDEN_LEN)
-
-#define RECEIVE_ID_INDEX(draft) (draft + TYPE_LEN)
-#define RECEIVE_MSG_INDEX(draft) (draft + TYPE_LEN + IDEN_LEN)
-
-#define GET_TYPE(string) (*(short*)string)
-#define SET_TYPE(string, t) (*(short*)string = t)
-
-#define IDEN(string) (string + IDEN_IX)
-#define GET_DOMAIN(string) (string + DOMAIN_IX)
-
-typedef struct pipeline {
-    char domain[DOMAIN_LEN];
-    char iden[IDEN_LEN];
-    char to_client_fp[BUF_SIZE];
-    char to_daemon_fp[BUF_SIZE];
-} Pipeline;
-
-void get_filepath(char * buffer, Pipeline * pline);
-
-enum type {
-    Connect = 0,
-    Say = 1,
-    Saycount = 2,
-    Receive = 3,
-    Recvcont = 4,
-    Disconnect = 7,
-    Ping = 5,
-    Pong = 6
-};
-
-
-
 void clear_msg(char * draft) {
     for (int i = 0; i < BUF_SIZE; i++) {
         draft[i] = 0;
@@ -189,38 +121,4 @@ void init_client_pipeline(Pipeline * pline, char * domain, char * iden) {
 
     strcat(pline->to_daemon_fp, "_WR");                        // domain/identifier_WR
     strcat(pline->to_client_fp, "_RD");                        // domain/identifier_RD
-}
-
-int main() {
-    // Connect to server
-    Pipeline colby;
-    init_client_pipeline(&colby, "Rutherford", "Colby");
-    // printf("Domain: %s\nIden: %s\nto_client: %s\nto_daemon: %s\n\n", colby.domain, colby.iden, colby.to_client_fp, colby.to_daemon_fp);
-    connect_to_server(&colby);
-
-    Pipeline zara;
-    init_client_pipeline(&zara, "Rutherford", "Zara");
-    connect_to_server(&zara);
-
-    send(&colby, "Hi I'm Colby");
-    receive(&zara);
-
-    send(&zara, "Hi my name's Zara, nice to meet you");
-    receive(&colby);
-
-    Pipeline joshua;
-    init_client_pipeline(&joshua, "Rutherford", "Joshua");
-    connect_to_server(&joshua);
-
-    send(&joshua, "Hey guys!");
-    receive(&colby);
-    receive(&zara);
-
-    send(&colby, "Hey Joshua, welcome to the domain :)");
-    receive(&joshua);
-    receive(&zara);
-    
-    send(&zara, "Thanks for joining us");
-    receive(&colby);
-    receive(&joshua);
 }
