@@ -17,10 +17,10 @@ clean:
 
 # My testing
 sani:
-	rm -r april
-	rm gevent
-	rm server
 	rm client
+	rm server
+	rm gevent
+	rm -r Rutherford
 
 server:
 	gcc -o server server.c

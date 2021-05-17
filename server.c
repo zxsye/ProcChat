@@ -279,10 +279,6 @@ int run_daemon(char * buffer) {
 
     // Make domain
     Pipeline pline;
-    // char domain[DOMAIN_LEN];
-    // char iden[IDEN_LEN];
-    // char to_client_fp[BUF_SIZE];
-    // char to_daemon_fp[BUF_SIZE];
     get_filepath(buffer, &pline);
 
     // Make domain directory

@@ -6,3 +6,4 @@ del
 gevent
 friday
 client
+zclient.c
