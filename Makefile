@@ -13,6 +13,7 @@ server: $(SRC) $(HEADERS)
 	$(CC) $(SRC) -o procchat
 
 test:
+	make clean
 	make procchat
 	make compile_tests
 	sh test.sh
@@ -21,9 +22,10 @@ compile_tests:
 	sh compile_tests.sh
 
 gen:
+	make clean
 	make procchat
 	make compile_tests
 	sh gen_tests.sh
-	
+
 clean:
 	rm -f procchat

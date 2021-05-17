@@ -1,6 +1,6 @@
 #!/bin/bash
 CC=gcc
-CFLAGS="-fsanitize=address -Wall -Werror -std=gnu11 -lm"
+CFLAGS="-fsanitize=address -Wall -Werror -std=gnu11"
 
 inputs=(testcases/src/*)
 for infile in "${inputs[@]}";

@@ -9,4 +9,7 @@ int main() {
     connect_to_server(&colby);
 
     sleep(16);
+    receive(&colby);
+
+    send(&colby, " ", Pong, 0);
 }

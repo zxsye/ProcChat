@@ -8,7 +8,7 @@ void clear_msg(char * draft) {
 }
 
 int draft_say(char * draft, char * message, enum type msg_type, char trm) {
-    if (msg_type != Say && msg_type != Saycont) {
+    if (msg_type != Say && msg_type != Saycont && msg_type != Pong) {
         return -1;
     }
     clear_msg(draft);
@@ -69,6 +69,9 @@ void print_msg(char * msg, Pipeline * receiver) {
         BYTE trm = *(BYTE*)(msg + BUF_SIZE - 1);
         printf("Type: %d\nFrom: %s\nContent: %s\nTerminate: %d\n", type, from, content, trm);
         
+    } else if (type == Ping) {
+        printf("Type: %d\nFrom: %s\nContent: %s\n", type, from, content);
+
     } else {
         perror("Message received neither RECEIVE, RECVCONT, nor PING");
         return;
