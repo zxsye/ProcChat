@@ -1,3 +1,5 @@
+open failed for disconnect/Colby_WR
+write failed for disconnect/Colby_WR
 
 === Sent message ===
 Sender: disconnect/Colby_WR
@@ -5,19 +7,13 @@ Type: 1, Msg: Hi I'm Colby
 
 === Received message ===
 Receiver: disconnect/Zara_WR
-Type: 3
-From: Colby
-Content: Hi I'm Colby
 
 === Sent message ===
 Sender: disconnect/Zara_WR
 Type: 1, Msg: Hi my name's Zara, nice to meet you
-
-=== Received message ===
-Receiver: disconnect/Colby_WR
-Type: 3
-From: Zara
-Content: Hi my name's Zara, nice to meet you
+open failed for disconnect/Colby_RD
+open failed for disconnect/Colby_WR
+write failed for disconnect/Colby_WR
 
 === Sent message ===
 Sender: disconnect/Colby_WR

@@ -10,5 +10,5 @@ do
     outfile=${outfile/.c}
     echo $outfile
 
-    # $CC $CFLAGS ./$infile -o $outfile
+    $CC $CFLAGS ./$infile -o $outfile
 done

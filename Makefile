@@ -10,7 +10,9 @@ procchat: $(SRC) $(HEADERS)
 	$(CC) $(CFLAGS) $(DFLAGS) $(SRC) -o $@
 
 test:
-	$(CC) $(CFLAGS) $(PFLAGS) $(SRC) -o $@
+	make procchat
+# sh compile_tests.sh
+	sh test.sh
 
 clean:
 	rm -f procchat
@@ -20,18 +22,3 @@ sani:
 	rm client
 	rm server
 	rm gevent
-	rm -r Rutherford
-
-server:
-	gcc -o my_server server.c
-
-client: 
-	gcc -o client client.c
-
-all:
-	make server
-	make client
-
-me:
-	make sani
-	make all

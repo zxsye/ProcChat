@@ -3,7 +3,7 @@
 #define DOMAIN "disconnect"
 
 int main() {
-    // Connect to server
+    // DOMAIN 1
     Pipeline colby;
     init_client_pipeline(&colby, DOMAIN, "Colby");
     connect_to_server(&colby);

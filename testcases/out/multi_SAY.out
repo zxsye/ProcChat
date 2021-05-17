@@ -1,0 +1,88 @@
+
+=== Sent message ===
+Sender: multi_SAY/Colby_WR
+Type: 1, Msg: Hi I'm Colby
+
+=== Received message ===
+Receiver: multi_SAY/Zara_WR
+Type: 3
+From: Colby
+Content: Hi I'm Colby
+
+=== Sent message ===
+Sender: multi_SAY/Zara_WR
+Type: 1, Msg: Hi my name's Zara, nice to meet you
+
+=== Received message ===
+Receiver: multi_SAY/Colby_WR
+Type: 3
+From: Zara
+Content: Hi my name's Zara, nice to meet you
+
+=== Sent message ===
+Sender: multi_SAY_2/Amanda_WR
+Type: 1, Msg: Bonjour, je m'appelle Amanda
+
+=== Received message ===
+Receiver: multi_SAY_2/Bovey_WR
+Type: 3
+From: Amanda
+Content: Bonjour, je m'appelle Amanda
+
+=== Sent message ===
+Sender: multi_SAY_2/Bovey_WR
+Type: 1, Msg: Sorry I don't speak German
+
+=== Received message ===
+Receiver: multi_SAY_2/Amanda_WR
+Type: 3
+From: Bovey
+Content: Sorry I don't speak German
+
+=== Sent message ===
+Sender: multi_SAY/Joshua_WR
+Type: 1, Msg: Hey guys!
+
+=== Received message ===
+Receiver: multi_SAY/Colby_WR
+Type: 3
+From: Joshua
+Content: Hey guys!
+
+=== Received message ===
+Receiver: multi_SAY/Zara_WR
+Type: 3
+From: Joshua
+Content: Hey guys!
+
+=== Sent message ===
+Sender: multi_SAY/Colby_WR
+Type: 1, Msg: Hey Joshua, welcome to the domain :)
+
+=== Received message ===
+Receiver: multi_SAY/Joshua_WR
+Type: 3
+From: Colby
+Content: Hey Joshua, welcome to the domain :)
+
+=== Received message ===
+Receiver: multi_SAY/Zara_WR
+Type: 3
+From: Colby
+Content: Hey Joshua, welcome to the domain :)
+
+=== Sent message ===
+Sender: multi_SAY/Zara_WR
+Type: 1, Msg: Thanks for joining us
+
+=== Received message ===
+Receiver: multi_SAY/Joshua_WR
+Type: 3
+From: Zara
+Content: Thanks for joining us
+
+=== Received message ===
+Receiver: multi_SAY/Colby_WR
+Type: 3
+From: Zara
+Content: Thanks for joining us

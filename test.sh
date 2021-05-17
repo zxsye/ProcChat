@@ -13,12 +13,8 @@ do
     outfile+=".out"
 
     # Run test cases
-    ./my_server &
+    ./procchat &
     ./$infile | diff - $outfile
-
-    sleep 2
-    kill $(ps aux | grep '[m]y_server' | awk '{print $2}') > /dev/null
-    rm gevent
 
     # Check test result
     if [ $? -eq 0 ]; then
@@ -36,6 +32,11 @@ do
         "
         total_test=$((total_test+1))
     fi
+
+    sleep 2
+    kill $(ps aux | grep '[p]rocchat' | awk '{print $2}') > /dev/null
+    rm gevent
+
 done
 
 echo "#######################################"
