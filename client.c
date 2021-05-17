@@ -46,6 +46,11 @@ int send(Pipeline * sender, char * message, enum type msg_type, char trm) {
         printf("Terminate: %d\n", ((BYTE*)draft)[2047]);
     }
 
+    // struct timeval timeout;
+    // timeout.tv_sec = 0;
+    // timeout.tv_usec = 50000;
+    // select(0, NULL, NULL, NULL, &timeout);  
+
     return 0;
 }
 
