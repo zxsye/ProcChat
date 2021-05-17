@@ -124,8 +124,8 @@ int do_say(char * in_mail, Pipeline * pline) {
 /*
 Takes in buffer for maximum 2048 characters.
 */
-int do_saycount(char * in_mail, Pipeline * pline) {
-    if (GET_TYPE(in_mail) != Saycount) {
+int do_saycont(char * in_mail, Pipeline * pline) {
+    if (GET_TYPE(in_mail) != Saycont) {
         fprintf(stderr, "Failed do_saycount:\n");
         return -1;
     }
@@ -170,8 +170,8 @@ int daemon_protocol(char * buffer, Pipeline * pline) {
             perror("Failed do_say");
             return -1;
         }
-    } else if (GET_TYPE(buffer) == Saycount) {
-        if ( -1 == do_saycount(buffer, pline) ) {
+    } else if (GET_TYPE(buffer) == Saycont) {
+        if ( -1 == do_saycont(buffer, pline) ) {
             perror("Failed do_say");
             return -1;
         }
@@ -195,7 +195,7 @@ int daemon_protocol(char * buffer, Pipeline * pline) {
     } else if ( GET_TYPE(buffer) == Disconnect) {
         return Disconnect;
     } else {
-        fprintf(stderr, "Message is incorrect");
+        fprintf(stdout, "Message is incorrect");
     }
     return 0;
 }
@@ -348,7 +348,6 @@ int main() {
         
 		timeout.tv_sec = PPTIME;
 		timeout.tv_usec = 0;
-		timeout = timeout;
 
 		int ret = select(maxfd, &allfds, NULL, NULL, NULL);
 		if (ret <= 0 || !FD_ISSET(gevent_fd, &allfds)) {

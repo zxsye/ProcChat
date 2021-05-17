@@ -7,22 +7,25 @@ void clear_msg(char * draft) {
     }
 }
 
-int draft_say(char * draft, char * message, enum type t) {
-    if (t != Say && t != Saycount) {
+int draft_say(char * draft, char * message, enum type msg_type, char trm) {
+    if (msg_type != Say && msg_type != Saycont) {
         return -1;
     }
     clear_msg(draft);
-    SET_TYPE(draft, t);
+    SET_TYPE(draft, msg_type);
     
     char * draft_msg = SAY_MSG_INDEX(draft);
+    if (msg_type == Saycont) {
+        SET_TRM(draft, trm);
+    }
     strcpy(draft_msg, message);
 
     return 0;
 }
 
-int send(Pipeline * sender, char * message) {
+int send(Pipeline * sender, char * message, enum type msg_type, char trm) {
     char draft[BUF_SIZE] = {0};
-    draft_say(draft, message, Say);
+    draft_say(draft, message, msg_type, trm);
 
     errno = 0;
     int fd = open(sender->to_daemon_fp, O_WRONLY);
@@ -39,6 +42,9 @@ int send(Pipeline * sender, char * message) {
 
     printf("\n=== Sent message ===\n");
     printf("Sender: %s\nType: %d, Msg: %s\n", sender->to_daemon_fp, GET_TYPE(draft), SAY_MSG_INDEX(draft));
+    if (msg_type == Saycont) {
+        printf("Terminate: %d\n", ((BYTE*)draft)[2047]);
+    }
 
     return 0;
 }
@@ -101,7 +107,7 @@ void connect_to_server(Pipeline * pline) {
 
     struct timeval timeout;
     timeout.tv_sec = 0;
-    timeout.tv_usec = 100 * 1000;
+    timeout.tv_usec = 300 * 1000;
     select(0, NULL, NULL, NULL, &timeout);
     // Open reading channel
     // fd = open(pline->to_daemon_fp, O_WRONLY);

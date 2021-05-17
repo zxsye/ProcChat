@@ -1,0 +1,54 @@
+
+=== Sent message ===
+Sender: one_SAYCONT_int/Joshua_WR
+Type: 2, Msg: Hey guys!...
+Terminate: 0
+
+=== Received message ===
+Receiver: one_SAYCONT_int/Colby_WR
+Type: 4
+From: Joshua
+Content: Hey guys!...
+Terminate: 0
+
+=== Received message ===
+Receiver: one_SAYCONT_int/Zara_WR
+Type: 4
+From: Joshua
+Content: Hey guys!...
+Terminate: 0
+
+=== Sent message ===
+Sender: one_SAYCONT_int/Colby_WR
+Type: 1, Msg: Hey Joshua, welcome to the domain :)
+
+=== Received message ===
+Receiver: one_SAYCONT_int/Joshua_WR
+Type: 3
+From: Colby
+Content: Hey Joshua, welcome to the domain :)
+
+=== Received message ===
+Receiver: one_SAYCONT_int/Zara_WR
+Type: 3
+From: Colby
+Content: Hey Joshua, welcome to the domain :)
+
+=== Sent message ===
+Sender: one_SAYCONT_int/Joshua_WR
+Type: 2, Msg: .. Rude, I'm leaving. Next time don't interrupt
+Terminate: 255
+
+=== Received message ===
+Receiver: one_SAYCONT_int/Colby_WR
+Type: 4
+From: Joshua
+Content: .. Rude, I'm leaving. Next time don't interrupt
+Terminate: 255
+
+=== Received message ===
+Receiver: one_SAYCONT_int/Zara_WR
+Type: 4
+From: Joshua
+Content: .. Rude, I'm leaving. Next time don't interrupt
+Terminate: 255

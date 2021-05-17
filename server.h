@@ -35,6 +35,8 @@
 #define DOMAIN_LEN 256  // max = 255 char with 1 for null byte
 
 #define PPTIME 15
+#define TRM -1
+#define NON_TRM 0
 
 #define SAY_MSG_INDEX(draft) (draft + TYPE_LEN)
 #define IDEN_INDEX(draft) (draft + TYPE_LEN)
@@ -45,6 +47,7 @@
 
 #define GET_TYPE(string) (*(short*)string)
 #define SET_TYPE(string, t) (*(short*)string = t)
+#define SET_TRM(string, trm) (*(string + 2048 - 1) = trm )
 
 #define IDEN(string) (string + IDEN_IX)
 #define GET_DOMAIN(string) (string + DOMAIN_IX)
@@ -52,7 +55,7 @@
 enum type {
     Connect = 0,
     Say = 1,
-    Saycount = 2,
+    Saycont = 2,
     Receive = 3,
     Recvcont = 4,
     Disconnect = 7,

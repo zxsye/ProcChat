@@ -1,0 +1,129 @@
+
+=== Sent message ===
+Sender: multi_SAYCONT/Colby_WR
+Type: 2, Msg: Hi I'm Colby and I have something to say...
+Terminate: 0
+
+=== Received message ===
+Receiver: multi_SAYCONT/Zara_WR
+Type: 4
+From: Colby
+Content: Hi I'm Colby and I have something to say...
+Terminate: 0
+
+=== Sent message ===
+Sender: multi_SAYCONT/Colby_WR
+Type: 2, Msg: ...hold on one sec...
+Terminate: 0
+
+=== Received message ===
+Receiver: multi_SAYCONT/Zara_WR
+Type: 4
+From: Colby
+Content: ...hold on one sec...
+Terminate: 0
+
+=== Sent message ===
+Sender: multi_SAYCONT/Colby_WR
+Type: 2, Msg: ...I am very cool
+Terminate: 255
+
+=== Received message ===
+Receiver: multi_SAYCONT/Zara_WR
+Type: 4
+From: Colby
+Content: ...I am very cool
+Terminate: 255
+
+=== Sent message ===
+Sender: multi_SAYCONT_2/Amanda_WR
+Type: 2, Msg: Bonjour, je m'appelle Amanda...
+Terminate: 0
+
+=== Received message ===
+Receiver: multi_SAYCONT_2/Bovey_WR
+Type: 4
+From: Amanda
+Content: Bonjour, je m'appelle Amanda...
+Terminate: 0
+
+=== Sent message ===
+Sender: multi_SAYCONT_2/Amanda_WR
+Type: 2, Msg: .. that means my name is Amanda...
+Terminate: 0
+
+=== Received message ===
+Receiver: multi_SAYCONT_2/Bovey_WR
+Type: 4
+From: Amanda
+Content: .. that means my name is Amanda...
+Terminate: 0
+
+=== Sent message ===
+Sender: multi_SAYCONT_2/Amanda_WR
+Type: 2, Msg: .. what's your name?
+Terminate: 255
+
+=== Received message ===
+Receiver: multi_SAYCONT_2/Bovey_WR
+Type: 4
+From: Amanda
+Content: .. what's your name?
+Terminate: 255
+
+=== Sent message ===
+Sender: multi_SAYCONT/Joshua_WR
+Type: 2, Msg: Hey guys!...
+Terminate: 0
+
+=== Received message ===
+Receiver: multi_SAYCONT/Colby_WR
+Type: 4
+From: Joshua
+Content: Hey guys!...
+Terminate: 0
+
+=== Received message ===
+Receiver: multi_SAYCONT/Zara_WR
+Type: 4
+From: Joshua
+Content: Hey guys!...
+Terminate: 0
+
+=== Sent message ===
+Sender: multi_SAYCONT/Joshua_WR
+Type: 2, Msg: ... I'm joshua...
+Terminate: 0
+
+=== Received message ===
+Receiver: multi_SAYCONT/Colby_WR
+Type: 4
+From: Joshua
+Content: ... I'm joshua...
+Terminate: 0
+
+=== Received message ===
+Receiver: multi_SAYCONT/Zara_WR
+Type: 4
+From: Joshua
+Content: ... I'm joshua...
+Terminate: 0
+
+=== Sent message ===
+Sender: multi_SAYCONT/Joshua_WR
+Type: 2, Msg: ... can I join in?
+Terminate: 255
+
+=== Received message ===
+Receiver: multi_SAYCONT/Colby_WR
+Type: 4
+From: Joshua
+Content: ... can I join in?
+Terminate: 255
+
+=== Received message ===
+Receiver: multi_SAYCONT/Zara_WR
+Type: 4
+From: Joshua
+Content: ... can I join in?
+Terminate: 255

@@ -1,0 +1,68 @@
+
+=== Sent message ===
+Sender: one_SAY/Colby_WR
+Type: 1, Msg: Hi I'm Colby
+
+=== Received message ===
+Receiver: one_SAY/Zara_WR
+Type: 3
+From: Colby
+Content: Hi I'm Colby
+
+=== Sent message ===
+Sender: one_SAY/Zara_WR
+Type: 1, Msg: Hi my name's Zara, nice to meet you
+
+=== Received message ===
+Receiver: one_SAY/Colby_WR
+Type: 3
+From: Zara
+Content: Hi my name's Zara, nice to meet you
+
+=== Sent message ===
+Sender: one_SAY/Joshua_WR
+Type: 1, Msg: Hey guys!
+
+=== Received message ===
+Receiver: one_SAY/Colby_WR
+Type: 3
+From: Joshua
+Content: Hey guys!
+
+=== Received message ===
+Receiver: one_SAY/Zara_WR
+Type: 3
+From: Joshua
+Content: Hey guys!
+
+=== Sent message ===
+Sender: one_SAY/Colby_WR
+Type: 1, Msg: Hey Joshua, welcome to the domain :)
+
+=== Received message ===
+Receiver: one_SAY/Joshua_WR
+Type: 3
+From: Colby
+Content: Hey Joshua, welcome to the domain :)
+
+=== Received message ===
+Receiver: one_SAY/Zara_WR
+Type: 3
+From: Colby
+Content: Hey Joshua, welcome to the domain :)
+
+=== Sent message ===
+Sender: one_SAY/Zara_WR
+Type: 1, Msg: Thanks for joining us
+
+=== Received message ===
+Receiver: one_SAY/Colby_WR
+Type: 3
+From: Zara
+Content: Thanks for joining us
+
+=== Received message ===
+Receiver: one_SAY/Joshua_WR
+Type: 3
+From: Zara
+Content: Thanks for joining us

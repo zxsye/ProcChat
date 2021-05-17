@@ -23,7 +23,7 @@ sani:
 	rm -r Rutherford
 
 server:
-	gcc -o server server.c
+	gcc -o my_server server.c
 
 client: 
 	gcc -o client client.c

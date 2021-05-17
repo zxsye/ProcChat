@@ -7,3 +7,5 @@ gevent
 friday
 client
 zclient.c
+gen_tests.sh
+my_server

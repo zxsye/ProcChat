@@ -1,0 +1,34 @@
+
+=== Sent message ===
+Sender: one_SAYCONT/Colby_WR
+Type: 2, Msg: Hi I'm Colby...
+Terminate: 0
+
+=== Received message ===
+Receiver: one_SAYCONT/Zara_WR
+Type: 4
+From: Colby
+Content: Hi I'm Colby...
+Terminate: 0
+
+=== Sent message ===
+Sender: one_SAYCONT/Colby_WR
+Type: 2, Msg: ... sorry I stuttered
+Terminate: 255
+
+=== Received message ===
+Receiver: one_SAYCONT/Zara_WR
+Type: 4
+From: Colby
+Content: ... sorry I stuttered
+Terminate: 255
+
+=== Sent message ===
+Sender: one_SAYCONT/Zara_WR
+Type: 1, Msg: Hi my name's Zara, nice to meet you
+
+=== Received message ===
+Receiver: one_SAYCONT/Colby_WR
+Type: 3
+From: Zara
+Content: Hi my name's Zara, nice to meet you
