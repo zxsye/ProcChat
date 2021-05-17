@@ -1,6 +1,7 @@
 hell
 server
 hel.c
+procchat
 hell.c
 del
 gevent
@@ -9,4 +10,3 @@ client
 zclient.c
 gen_tests.sh
 my_server
-procchat

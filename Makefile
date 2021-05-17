@@ -9,6 +9,9 @@ SRC=server.c
 procchat: $(SRC) $(HEADERS)
 	$(CC) $(CFLAGS) $(DFLAGS) $(SRC) -o $@
 
+server: $(SRC) $(HEADERS)
+	$(CC) $(SRC) -o procchat
+
 test:
 	make procchat
 	make compile_tests
