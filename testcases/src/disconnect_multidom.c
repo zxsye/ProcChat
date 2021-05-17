@@ -5,21 +5,21 @@
 
 int main() {
     // DOMAIN 1
-    Pipeline colby;
-    init_client_pipeline(&colby, DOMAIN, "Colby");
-    connect_to_server(&colby);
+    Pipeline dono;
+    init_client_pipeline(&dono, DOMAIN, "Dono");
+    connect_to_server(&dono);
 
     Pipeline zara;
     init_client_pipeline(&zara, DOMAIN, "Zara");
     connect_to_server(&zara);
 
-    send(&colby, "Hi I'm Colby", Say, 0);
+    send(&dono, "Hi I'm Dono", Say, 0);
     receive(&zara);
 
     send(&zara, "Hi my name's Zara, nice to meet you", Say, 0);
-    receive(&colby);
+    receive(&dono);
 
-    send(&colby, " ", Disconnect, 0);
+    send(&dono, " ", Disconnect, 0);
     send(&zara, " ", Disconnect, 0);
 
     // DOMAIN 2

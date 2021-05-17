@@ -33,7 +33,7 @@ do
         total_test=$((total_test+1))
     fi
 
-    sleep 10
+    sleep 5
     kill $(ps aux | grep '[p]rocchat' | awk '{print $2}') > /dev/null
     rm gevent
 

@@ -20,5 +20,10 @@ test:
 compile_tests:
 	sh compile_tests.sh
 
+gen:
+	make procchat
+	make compile_tests
+	sh gen_tests.sh
+	
 clean:
 	rm -f procchat

@@ -10,3 +10,4 @@ client
 zclient.c
 gen_tests.sh
 my_server
+procchat.dSYM

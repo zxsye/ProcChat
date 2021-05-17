@@ -1,26 +1,26 @@
 
 === Sent message ===
-Sender: disconnect_multidom/Colby_WR
-Type: 1, Msg: Hi I'm Colby
+Sender: disconnect_multidom/Dono_WR
+Type: 1, Msg: Hi I'm Dono
 
 === Received message ===
 Receiver: disconnect_multidom/Zara_WR
 Type: 3
-From: Colby
-Content: Hi I'm Colby
+From: Dono
+Content: Hi I'm Dono
 
 === Sent message ===
 Sender: disconnect_multidom/Zara_WR
 Type: 1, Msg: Hi my name's Zara, nice to meet you
 
 === Received message ===
-Receiver: disconnect_multidom/Colby_WR
+Receiver: disconnect_multidom/Dono_WR
 Type: 3
 From: Zara
 Content: Hi my name's Zara, nice to meet you
 
 === Sent message ===
-Sender: disconnect_multidom/Colby_WR
+Sender: disconnect_multidom/Dono_WR
 Type: 0, Msg: 
 
 === Sent message ===
