@@ -1,4 +1,5 @@
 #include "server.h"
+#include <string.h>
 
 /*  Takes in "Connect" type message and converts to filepath string to open pipes
  */
@@ -115,7 +116,12 @@ int do_say(char * in_mail, Pipeline * pline) {
     SET_TYPE(draft, Receive);
 
     strcpy(draft + 2, pline->iden); // To remove _RD
-    strcpy(draft + 2 + 256, SAY_MSG_INDEX(in_mail));
+    char * msg = SAY_MSG_INDEX(in_mail);
+    if (strlen(msg) >= 1790) {
+        perror("Cannot SAY message more than 1789 characters");
+        return -1;
+    }
+    strcpy(draft + 2 + 256, msg);
 
     domain_broadcast(draft, pline);
     return 0;
