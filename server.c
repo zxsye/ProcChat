@@ -141,6 +141,11 @@ int do_saycont(char * in_mail, Pipeline * pline) {
     SET_TYPE(draft, Recvcont);
 
     strcpy(draft + 2, pline->iden); // To remove _RD
+    char * msg = SAY_MSG_INDEX(in_mail);
+    if (strlen(msg) >= 1789) {
+        perror("Cannot SAYCONT message more than 1788 characters");
+        return -1;
+    }
     strcpy(draft + 2 + 256, SAY_MSG_INDEX(in_mail));
 
     draft[BUF_SIZE - 1] = in_mail[BUF_SIZE - 1]; // terminating character
