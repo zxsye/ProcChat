@@ -34,7 +34,7 @@ do
         total_test=$((total_test+1))
     fi
 
-    kill $(ps aux | grep '[p]rocchat' | awk '{print $2}') > /dev/null
+    kill $(ps aux | grep '[p]rocchat' | awk '{print $2}')
     rm gevent
 
 done
