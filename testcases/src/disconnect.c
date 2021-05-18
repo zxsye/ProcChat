@@ -33,8 +33,8 @@ int main() {
     send(&andrew, "Hi I'm Andrew", Say, 0);
     receive(&helen);
 
-    send(&andrew, "Hi my name's Helen, nice to meet you", Say, 0);
-    receive(&helen);
+    send(&helen, "Hi my name's Helen, nice to meet you", Say, 0);
+    receive(&andrew);
 
 
 }
