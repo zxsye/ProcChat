@@ -34,7 +34,10 @@ do
         total_test=$((total_test+1))
     fi
 
-    kill $(ps aux | grep '[p]rocchat' | awk '{print $2}')
+    # kill $(ps aux | grep '[p]rocchat' | awk '{print $2}')
+    pkill -9 procchat
+    pkill -9 $infile
+    
     rm gevent
 
 done
