@@ -29,6 +29,8 @@ int get_filepath(char * buffer, Pipeline * pline) {
     return 0;
 }
 
+/*  Send a 2048 byte message to the client
+ */
 int send_to_client(char * msg, Pipeline * pline) {
     int ret = 0;
     int fd = open(pline->to_client_fp, O_WRONLY);
@@ -64,9 +66,11 @@ int do_recvcont(char * buffer, Pipeline * pline) {
     return 0;
 }
 
+/*  Broadcast RECEIVE or RECVCONT to other clients in current domain
+        - Find all other client handlers in current domain
+ */
 int domain_broadcast(char * msg, Pipeline * pline) {
-    // Find all other client handlers in current domain
-    struct dirent *de;              // Pointer for directory entry
+    struct dirent *de;                     // Pointer for directory entry
     DIR *dr = opendir(pline->domain);      // opendir() returns a pointer of DIR type. 
   
     if (dr == NULL) { // opendir returns NULL if couldn't open directory
@@ -168,7 +172,7 @@ int do_saycont(char * in_mail, Pipeline * pline) {
 }
 
 
-/*  Relays <RECEIVE IDENTIFIER MSG> to client */
+/*  Send PING message to client */
 int do_ping(char * ping, Pipeline * pline) {
     if (GET_TYPE(ping) != Ping) {
         return -1;
@@ -222,13 +226,11 @@ int daemon_protocol(char * buffer, Pipeline * pline) {
     return 0;
 }
 
-/*
-Takes in gevent buffer to construct daemon and FIFOs to handle new client.
-After successful construction begin running client handler.
+/*  Takes in gevent buffer to construct daemon and FIFOs to handle new client.
+    After successful construction begin running client handler.
 
-- Return -1: daemon has failed
-- Return DISCONNECT: daemon disconnected
-
+        - Return -1: daemon has failed
+        - Return DISCONNECT: daemon disconnected
 */
 int run_daemon(char * buffer) {
 
