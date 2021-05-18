@@ -3,9 +3,19 @@
 
 /*  Takes in "Connect" type message and converts to filepath string to open pipes
  */
-void get_filepath(char * buffer, Pipeline * pline) {
+int get_filepath(char * buffer, Pipeline * pline) {
 
-    strncpy(pline->domain, GET_DOMAIN(buffer), DOMAIN_LEN); 
+    char * domain = GET_DOMAIN(buffer);
+    if (strlen(domain) >= 256) {
+        perror("Domain cannot exceed 255 characters");
+        return -1;
+    }
+    strncpy(pline->domain, domain, DOMAIN_LEN); 
+    char * iden = GET_DOMAIN(buffer);
+    if (strlen(iden) >= 256) {
+        perror("Identifier cannot exceed 255 characters");
+        return -1;
+    }
     strcpy(pline->iden, IDEN(buffer));
 
     strcpy(pline->to_client_fp, pline->domain);                       // domain
@@ -16,7 +26,7 @@ void get_filepath(char * buffer, Pipeline * pline) {
 
     strcat(pline->to_daemon_fp, "_WR");                        // domain/identifier_WR
     strcat(pline->to_client_fp, "_RD");                        // domain/identifier_RD
-
+    return 0;
 }
 
 int send_to_client(char * msg, Pipeline * pline) {
@@ -146,6 +156,7 @@ int do_saycont(char * in_mail, Pipeline * pline) {
         perror("Cannot SAYCONT message more than 1788 characters");
         return -1;
     }
+
     strcpy(draft + 2 + 256, SAY_MSG_INDEX(in_mail));
 
     draft[BUF_SIZE - 1] = in_mail[BUF_SIZE - 1]; // terminating character
