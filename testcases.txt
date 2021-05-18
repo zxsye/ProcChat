@@ -1,0 +1,11 @@
+disconnect_multidom.c   disconnect clients from multiple domains
+disconnect.c            disconnect clients
+multi_multiconnect.c    connect multiple domains with multiple clients
+multi_SAY.c             multiple domains using SAY
+multi_SAYCONT.c         multiple domains using SAYCONT
+one_connect.c           connect one client
+one_multiconnect.c      connect multiple clients
+one_SAY.c               one domain using SAY
+one_SAYCONT_int.c       one domain using SAYCONT with 2+ clients
+one_SAYCONT.c           one domain using SAYCONT with 2 clients
+ping_pong.c             receive PING and send back PONG to server

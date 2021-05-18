@@ -1,5 +1,4 @@
 #include "server.h"
-#include <string.h>
 
 /*  Takes in "Connect" type message and converts to filepath string to open pipes
  */
