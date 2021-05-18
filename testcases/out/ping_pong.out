@@ -1,10 +1,40 @@
 
+=== Sent message ===
+Sender: ping_pong/Colby_WR
+Type: 1, Msg: Hi I'm Colby
+
+=== Received message ===
+Receiver: ping_pong/Zara_WR
+Type: 3
+From: Colby
+Content: Hi I'm Colby
+
+=== Sent message ===
+Sender: ping_pong/Zara_WR
+Type: 1, Msg: Hi my name's Zara, nice to meet you
+
+=== Received message ===
+Receiver: ping_pong/Colby_WR
+Type: 3
+From: Zara
+Content: Hi my name's Zara, nice to meet you
+
 === Received message ===
 Receiver: ping_pong/Colby_WR
 Type: 5
 From: 
 Content: 
 
+=== Received message ===
+Receiver: ping_pong/Zara_WR
+Type: 5
+From: 
+Content: 
+
 === Sent message ===
 Sender: ping_pong/Colby_WR
+Type: 6, Msg:  
+
+=== Sent message ===
+Sender: ping_pong/Zara_WR
 Type: 6, Msg:  

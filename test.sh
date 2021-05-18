@@ -59,3 +59,7 @@ rm -rf one_SAY
 rm -rf one_SAYCONT
 rm -rf one_SAYCONT_int
 rm -rf ping_pong
+rm -rf faulty_message
+rm -rf nested
+rm -rf one_connect_again
+rm -rf SAY_SAYCONT_long

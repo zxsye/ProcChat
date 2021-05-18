@@ -1,0 +1,60 @@
+
+=== Sent message ===
+Sender: nested/Colby_WR
+Type: 1, Msg: Hi I'm Colby
+
+=== Received message ===
+Receiver: nested/Zara_WR
+Type: 3
+From: Colby
+Content: Hi I'm Colby
+
+=== Sent message ===
+Sender: nested/Zara_WR
+Type: 1, Msg: Hi my name's Zara, nice to meet you
+
+=== Received message ===
+Receiver: nested/Colby_WR
+Type: 3
+From: Zara
+Content: Hi my name's Zara, nice to meet you
+
+=== Sent message ===
+Sender: nested/HAHA/Jack_WR
+Type: 1, Msg: Hi I'm Jack
+
+=== Received message ===
+Receiver: nested/HAHA/Peter_WR
+Type: 3
+From: Jack
+Content: Hi I'm Jack
+
+=== Sent message ===
+Sender: nested/HAHA/Peter_WR
+Type: 1, Msg: Hi my name's Peter, nice to meet you
+
+=== Received message ===
+Receiver: nested/HAHA/Jack_WR
+Type: 3
+From: Peter
+Content: Hi my name's Peter, nice to meet you
+
+=== Sent message ===
+Sender: nested/Colby_WR
+Type: 1, Msg: Hi I'm Colby xoxo
+
+=== Received message ===
+Receiver: nested/Zara_WR
+Type: 3
+From: Colby
+Content: Hi I'm Colby xoxo
+
+=== Sent message ===
+Sender: nested/Zara_WR
+Type: 1, Msg: Hi my name's Zara, hehe xd
+
+=== Received message ===
+Receiver: nested/Colby_WR
+Type: 3
+From: Zara
+Content: Hi my name's Zara, hehe xd

@@ -1,0 +1,24 @@
+
+=== Sent message ===
+Sender: faulty_message/Colby_WR
+Type: 1, Msg: Hi I'm Colby
+
+=== Sent message ===
+Sender: faulty_message/Colby_WR
+Type: 99, Msg: NEVER READ THIS
+
+=== Received message ===
+Receiver: faulty_message/Zara_WR
+Type: 3
+From: Colby
+Content: Hi I'm Colby
+
+=== Sent message ===
+Sender: faulty_message/Zara_WR
+Type: 1, Msg: Hi my name's Zara, nice to meet you
+
+=== Received message ===
+Receiver: faulty_message/Colby_WR
+Type: 3
+From: Zara
+Content: Hi my name's Zara, nice to meet you

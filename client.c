@@ -7,10 +7,8 @@ void clear_msg(char * draft) {
     }
 }
 
-int draft_say(char * draft, char * message, enum type msg_type, char trm) {
-    if (msg_type != Say && msg_type != Saycont && msg_type != Pong) {
-        return -1;
-    }
+int draft_say(char * draft, char * message, int msg_type, char trm) {
+
     clear_msg(draft);
     SET_TYPE(draft, msg_type);
     
@@ -23,7 +21,7 @@ int draft_say(char * draft, char * message, enum type msg_type, char trm) {
     return 0;
 }
 
-int send(Pipeline * sender, char * message, enum type msg_type, char trm) {
+int send(Pipeline * sender, char * message, int msg_type, char trm) {
     char draft[BUF_SIZE] = {0};
     draft_say(draft, message, msg_type, trm);
 

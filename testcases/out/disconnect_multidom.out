@@ -21,11 +21,11 @@ Content: Hi my name's Zara, nice to meet you
 
 === Sent message ===
 Sender: disconnect_multidom/Dono_WR
-Type: 0, Msg: 
+Type: 7, Msg:  
 
 === Sent message ===
 Sender: disconnect_multidom/Zara_WR
-Type: 0, Msg: 
+Type: 7, Msg:  
 
 === Sent message ===
 Sender: disconnect_multidom_2/Amanda_WR
@@ -65,8 +65,28 @@ Terminate: 255
 
 === Sent message ===
 Sender: disconnect_multidom_2/Amanda_WR
-Type: 0, Msg: 
+Type: 7, Msg:  
 
 === Sent message ===
 Sender: disconnect_multidom_2/Bovey_WR
-Type: 0, Msg: 
+Type: 7, Msg:  
+
+=== Sent message ===
+Sender: disconnect_multidom/Andrew_WR
+Type: 1, Msg: Hi I'm Andrew
+
+=== Received message ===
+Receiver: disconnect_multidom/Helen_WR
+Type: 3
+From: Andrew
+Content: Hi I'm Andrew
+
+=== Sent message ===
+Sender: disconnect_multidom/Andrew_WR
+Type: 1, Msg: Hi my name's Helen, nice to meet you
+
+=== Received message ===
+Receiver: disconnect_multidom/Helen_WR
+Type: 3
+From: Andrew
+Content: Hi my name's Helen, nice to meet you

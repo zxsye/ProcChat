@@ -9,3 +9,7 @@ one_SAY.c               one domain using SAY
 one_SAYCONT_int.c       one domain using SAYCONT with 2+ clients
 one_SAYCONT.c           one domain using SAYCONT with 2 clients
 ping_pong.c             receive PING and send back PONG to server
+SAY_SAYCONT_long.c      SAY and SAYCONT message that is 1791 characters long
+                        character beyond limit must be ignored
+nested.c                nested domain, with correct SAY communication
+faulty_message.c        send message with incorrect command
