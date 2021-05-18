@@ -241,7 +241,10 @@ int run_daemon(char * buffer) {
 
     // Make domain
     Pipeline pline;
-    get_filepath(buffer, &pline);
+    if (get_filepath(buffer, &pline) == -1) {
+        perror("Filepath is wrong");
+        return -1;
+    }
 
     // Make domain directory
     if ( -1 == mkdir(pline.domain, 0777) ) {
