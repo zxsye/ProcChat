@@ -26,23 +26,3 @@ Type: 7, Msg:
 === Sent message ===
 Sender: disconnect/Zara_WR
 Type: 7, Msg:  
-
-=== Sent message ===
-Sender: disconnect/Andrew_WR
-Type: 1, Msg: Hi I'm Andrew
-
-=== Received message ===
-Receiver: disconnect/Helen_WR
-Type: 3
-From: Andrew
-Content: Hi I'm Andrew
-
-=== Sent message ===
-Sender: disconnect/Andrew_WR
-Type: 1, Msg: Hi my name's Helen, nice to meet you
-
-=== Received message ===
-Receiver: disconnect/Helen_WR
-Type: 3
-From: Andrew
-Content: Hi my name's Helen, nice to meet you

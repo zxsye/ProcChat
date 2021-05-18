@@ -22,7 +22,8 @@ int main() {
     send(&dono, " ", Disconnect, 0);
     send(&zara, " ", Disconnect, 0);
 
-    // DOMAIN 2
+    // DOMAIN 2 
+    // Checking that GEVENT is still running
     Pipeline amanda;
     init_client_pipeline(&amanda, DOMAIN_2, "Amanda");
     connect_to_server(&amanda);
@@ -40,19 +41,4 @@ int main() {
 
     send(&amanda, " ", Disconnect, 0);
     send(&bovey, " ", Disconnect, 0);
-
-    // CHECK THAT GEVENT IS STILL RUNNING
-    Pipeline andrew;
-    init_client_pipeline(&andrew, DOMAIN, "Andrew");
-    connect_to_server(&andrew);
-
-    Pipeline helen;
-    init_client_pipeline(&helen, DOMAIN, "Helen");
-    connect_to_server(&helen);
-
-    send(&andrew, "Hi I'm Andrew", Say, 0);
-    receive(&helen);
-
-    send(&andrew, "Hi my name's Helen, nice to meet you", Say, 0);
-    receive(&helen);
 }
