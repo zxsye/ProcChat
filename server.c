@@ -327,7 +327,6 @@ int run_daemon(char * buffer) {
         int dp = daemon_protocol(buffer, &pline);
         if (dp == -1) {
             perror("Error in daemon_protocol");
-            return -1;
         } else if ( dp == Pong ) {
             client_alive = 1;
         } else if ( dp == Disconnect) {
