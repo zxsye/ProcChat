@@ -29,6 +29,7 @@
 #define TYPE_IX 0
 #define IDEN_IX 2
 #define DOMAIN_IX (2 + 256)
+#define TRM_IX (2048 - 1)
 
 #define TYPE_LEN 2
 #define IDEN_LEN 256    // max = 255 char with 1 for null byte

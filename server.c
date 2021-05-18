@@ -1,5 +1,4 @@
 #include "server.h"
-#include <string.h>
 
 /*  Takes in "Connect" type message and converts to filepath string to open pipes
  */
@@ -16,7 +15,7 @@ int get_filepath(char * buffer, Pipeline * pline) {
         perror("Identifier cannot exceed 255 characters");
         return -1;
     }
-    strcpy(pline->iden, IDEN(buffer));
+    strcpy(pline->iden, iden);
 
     strcpy(pline->to_client_fp, pline->domain);                       // domain
     strcat(pline->to_client_fp, "/");                          // domain/
@@ -29,6 +28,8 @@ int get_filepath(char * buffer, Pipeline * pline) {
     return 0;
 }
 
+/*  Send a 2048 byte message to the client
+ */
 int send_to_client(char * msg, Pipeline * pline) {
     int ret = 0;
     int fd = open(pline->to_client_fp, O_WRONLY);
@@ -43,6 +44,7 @@ int send_to_client(char * msg, Pipeline * pline) {
     close(fd);
     return ret;
 }
+
 
 /*  Relays <RECEIVE IDENTIFIER MSG> to client */
 int do_receive(char * buffer, Pipeline * pline) {
@@ -64,12 +66,14 @@ int do_recvcont(char * buffer, Pipeline * pline) {
     return 0;
 }
 
+/*  Broadcast RECEIVE or RECVCONT to other clients in current domain
+        - Find all other client handlers in current domain
+ */
 int domain_broadcast(char * msg, Pipeline * pline) {
-    // Find all other client handlers in current domain
-    struct dirent *de;              // Pointer for directory entry
+    struct dirent *de;                     // Pointer for directory entry
     DIR *dr = opendir(pline->domain);      // opendir() returns a pointer of DIR type. 
   
-    if (dr == NULL) { // opendir returns NULL if couldn't open directory
+    if (dr == NULL) {       // opendir returns NULL if couldn't open directory
         perror("do_say: Could not open current directory" );
         return -1;
     }
@@ -90,11 +94,9 @@ int domain_broadcast(char * msg, Pipeline * pline) {
             strcat(pipepath, filename);
 
             // Skip write pipes to own client
-            
             if (strcmp(pipepath, pline->to_daemon_fp) == 0) {  
                 continue;
             }
-
 
             // Write to other clients
             int fd = open(pipepath, O_WRONLY);
@@ -159,7 +161,11 @@ int do_saycont(char * in_mail, Pipeline * pline) {
 
     strcpy(draft + 2 + 256, SAY_MSG_INDEX(in_mail));
 
-    draft[BUF_SIZE - 1] = in_mail[BUF_SIZE - 1]; // terminating character
+    if (in_mail[TRM_IX] != 0 && in_mail[TRM_IX] != -1) {
+        perror("Terminating byte in SAYCONT must be either 255 or 0");
+        return -1;
+    }
+    draft[TRM_IX] = in_mail[TRM_IX]; // terminating character
 
     // Broadcast
     domain_broadcast(draft, pline);
@@ -168,7 +174,7 @@ int do_saycont(char * in_mail, Pipeline * pline) {
 }
 
 
-/*  Relays <RECEIVE IDENTIFIER MSG> to client */
+/*  Send PING message to client */
 int do_ping(char * ping, Pipeline * pline) {
     if (GET_TYPE(ping) != Ping) {
         return -1;
@@ -181,9 +187,8 @@ int do_ping(char * ping, Pipeline * pline) {
     return 0;
 }
 
-/*
-Handles all "normal operation" messages for daemon.
-Otherwise return the message type.
+/*  Handles all "normal operation" messages for daemon.
+    Otherwise return the message type, or return -1 for fail.
 */
 int daemon_protocol(char * buffer, Pipeline * pline) {
     // Check message type
@@ -217,21 +222,18 @@ int daemon_protocol(char * buffer, Pipeline * pline) {
     } else if ( GET_TYPE(buffer) == Disconnect) {
         return Disconnect;
     } else {
-        fprintf(stdout, "Message is incorrect");
+        perror("Message is incorrect");
     }
     return 0;
 }
 
-/*
-Takes in gevent buffer to construct daemon and FIFOs to handle new client.
-After successful construction begin running client handler.
+/*  Takes in gevent buffer to construct daemon and FIFOs to handle new client.
+    After successful construction begin running client handler.
 
-- Return -1: daemon has failed
-- Return DISCONNECT: daemon disconnected
-
+        - Return -1: daemon has failed
+        - Return DISCONNECT: daemon disconnected
 */
 int run_daemon(char * buffer) {
-
     if (GET_TYPE(buffer) != Connect) {
         printf("Type is not connect\n");
         return -1;
@@ -239,7 +241,10 @@ int run_daemon(char * buffer) {
 
     // Make domain
     Pipeline pline;
-    get_filepath(buffer, &pline);
+    if (get_filepath(buffer, &pline) == -1) {
+        perror("Could not parse Connect message");
+        return -1;
+    }
 
     // Make domain directory
     if ( -1 == mkdir(pline.domain, 0777) ) {
@@ -250,7 +255,7 @@ int run_daemon(char * buffer) {
             return -1;
         }
     }
-
+    
     // Starting FIFO
     if ( mkfifo(pline.to_client_fp, 0777) == -1 ) {
         perror("Cannot make pipe to client");
@@ -324,7 +329,7 @@ int run_daemon(char * buffer) {
         // Handle update
         int dp = daemon_protocol(buffer, &pline);
         if (dp == -1) {
-            return -1;
+            perror("Error in daemon_protocol");
         } else if ( dp == Pong ) {
             client_alive = 1;
         } else if ( dp == Disconnect) {
