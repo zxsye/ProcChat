@@ -19,11 +19,8 @@ int main() {
     send(&zara, "Hi my name's Zara, nice to meet you", Say, 0);
     receive(&dono);
 
-    send(&dono, " ", Disconnect, 0);
-    send(&zara, " ", Disconnect, 0);
 
     // DOMAIN 2 
-    // Checking that GEVENT is still running
     Pipeline amanda;
     init_client_pipeline(&amanda, DOMAIN_2, "Amanda");
     connect_to_server(&amanda);
@@ -39,6 +36,8 @@ int main() {
     send(&amanda, ".. what's your name?", Saycont, TRM);
     receive(&bovey);
 
+    send(&dono, " ", Disconnect, 0);
+    send(&zara, " ", Disconnect, 0);
     send(&amanda, " ", Disconnect, 0);
     send(&bovey, " ", Disconnect, 0);
 }

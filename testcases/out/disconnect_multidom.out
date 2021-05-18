@@ -20,14 +20,6 @@ From: Zara
 Content: Hi my name's Zara, nice to meet you
 
 === Sent message ===
-Sender: disconnect_multidom/Dono_WR
-Type: 7, Msg:  
-
-=== Sent message ===
-Sender: disconnect_multidom/Zara_WR
-Type: 7, Msg:  
-
-=== Sent message ===
 Sender: disconnect_multidom_2/Amanda_WR
 Type: 2, Msg: Bonjour, je m'appelle Amanda...
 Terminate: 0
@@ -62,6 +54,14 @@ Type: 4
 From: Amanda
 Content: .. what's your name?
 Terminate: 255
+
+=== Sent message ===
+Sender: disconnect_multidom/Dono_WR
+Type: 7, Msg:  
+
+=== Sent message ===
+Sender: disconnect_multidom/Zara_WR
+Type: 7, Msg:  
 
 === Sent message ===
 Sender: disconnect_multidom_2/Amanda_WR
