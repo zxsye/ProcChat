@@ -3,6 +3,7 @@ disconnect.c            disconnect clients
 multi_multiconnect.c    connect multiple domains with multiple clients
 multi_SAY.c             multiple domains using SAY
 multi_SAYCONT.c         multiple domains using SAYCONT
+one_connect_again.c     connect client and try to connect again - must not connect
 one_connect.c           connect one client
 one_multiconnect.c      connect multiple clients
 one_SAY.c               one domain using SAY
