@@ -11,3 +11,4 @@ zclient.c
 gen_tests.sh
 my_server
 procchat.dSYM
+.DS_Store
